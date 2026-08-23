@@ -45,7 +45,22 @@ jobs:
 
       - name: Prepare CI-only demo build
         run: |
-          cp src/c/main.c src/c/main_prod.c
+          cp src/c/main.c src/c/main_prod.inc
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('src/c/main_prod.inc')
+          source = path.read_text()
+          source, count = re.subn(
+              r'\nint main\(void\)\n\{\n\tinit\(\);\n\tapp_event_loop\(\);\n\tdeinit\(\);\n\}\s*$',
+              '\n',
+              source,
+          )
+          if count != 1:
+              raise SystemExit('Could not remove original main() from CI demo source')
+          path.write_text(source)
+          PY
           cp ci/emulator_demo_main.c src/c/main.c
           rm -rf build
           pebble build
