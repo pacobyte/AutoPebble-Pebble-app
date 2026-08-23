@@ -24,7 +24,7 @@ jobs:
           sudo apt-get install -y \
             nodejs npm libpng-dev \
             libsdl2-2.0-0 libglib2.0-0 libpixman-1-0 zlib1g \
-            xvfb
+            xvfb xdotool
           python -m pip install --upgrade pip
           python -m pip install pebble-tool==5.0.39
 
@@ -70,18 +70,39 @@ jobs:
           pebble install --emulator emery
           sleep 2
 
-      - name: Capture Quick Screen
+      - name: Capture long Quick Screen
         run: |
-          pebble screenshot --emulator emery --no-open emery-quick.png
+          pebble screenshot --emulator emery --no-open emery-quick-long.png
           sleep 4
 
-      - name: Capture List Screen
+      - name: Capture no-title Quick Screen with explicit font override
         run: |
-          pebble screenshot --emulator emery --no-open emery-list.png
+          pebble screenshot --emulator emery --no-open emery-quick-no-title.png
           sleep 4
 
-      - name: Capture Text Screen
-        run: pebble screenshot --emulator emery --no-open emery-text.png
+      - name: Capture long List before navigation
+        run: |
+          pebble screenshot --emulator emery --no-open emery-list-long-before.png
+          xdotool key x
+          xdotool key x
+          xdotool key x
+          xdotool key x
+          sleep 1
+          pebble screenshot --emulator emery --no-open emery-list-long-after.png
+          sleep 5
+
+      - name: Capture long Text Screen before and after scrolling
+        run: |
+          pebble screenshot --emulator emery --no-open emery-text-long-before.png
+          xdotool key x
+          xdotool key x
+          xdotool key x
+          sleep 1
+          pebble screenshot --emulator emery --no-open emery-text-long-after.png
+          sleep 5
+
+      - name: Capture explicit legacy override List
+        run: pebble screenshot --emulator emery --no-open emery-list-custom.png
 
       - name: Upload production PBW artifact
         uses: actions/upload-artifact@v4
@@ -89,11 +110,15 @@ jobs:
           name: autopebble-pbw
           path: autopebble-production.pbw
 
-      - name: Upload Emery demo screenshots
+      - name: Upload Emery hardening screenshots
         uses: actions/upload-artifact@v4
         with:
-          name: emery-screen-demos
+          name: emery-hardening
           path: |
-            emery-quick.png
-            emery-list.png
-            emery-text.png
+            emery-quick-long.png
+            emery-quick-no-title.png
+            emery-list-long-before.png
+            emery-list-long-after.png
+            emery-text-long-before.png
+            emery-text-long-after.png
+            emery-list-custom.png
