@@ -86,11 +86,12 @@ static void demo_show_list_custom(void *context) {
 int main(void) {
   init();
 
+  /* Long windows keep host-side screenshot/xdotool latency from crossing scenarios. */
   app_timer_register(500, demo_show_quick_long, NULL);
-  app_timer_register(4500, demo_show_quick_no_title, NULL);
-  app_timer_register(8500, demo_show_list_long, NULL);
-  app_timer_register(14500, demo_show_text_long, NULL);
-  app_timer_register(21500, demo_show_list_custom, NULL);
+  app_timer_register(25000, demo_show_quick_no_title, NULL);
+  app_timer_register(50000, demo_show_list_long, NULL);
+  app_timer_register(80000, demo_show_text_long, NULL);
+  app_timer_register(110000, demo_show_list_custom, NULL);
 
   app_event_loop();
   deinit();
