@@ -22,7 +22,8 @@
         "targetPlatforms": [
             "aplite",
             "basalt",
-            "chalk"
+            "chalk",
+            "emery"
         ],
         "uuid": "1b2d45a5-c00a-4f89-b567-4cf4d2d78b2f",
         "watchapp": {
