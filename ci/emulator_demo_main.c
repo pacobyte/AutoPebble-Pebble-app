@@ -1,6 +1,4 @@
-#define main autopebble_original_main
-#include "main_prod.c"
-#undef main
+#include "main_prod.inc"
 
 static void demo_show_quick(void *context) {
   AutoPebbleWindow *window = initQuickScreen();
@@ -32,7 +30,7 @@ static void demo_show_list(void *context) {
 
 static void demo_show_text(void *context) {
   AutoPebbleWindow *window = initTextScreen();
-  AutoPebbleTextScreen *screen = getCurrentAutoPebbleTextScreen();
+  AutoPebbleTextScreen *screen = (AutoPebbleTextScreen *)getCurrentAutoPebbleItem();
 
   screen->labelTitle = resetString(screen->labelTitle, "Text Screen");
   screen->labelText = resetString(
