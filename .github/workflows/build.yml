@@ -1,0 +1,38 @@
+name: Build Pebble app
+
+on:
+  push:
+    branches:
+      - pebble-time-2
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Pebble build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nodejs npm libpng-dev
+          python -m pip install --upgrade pip
+          python -m pip install pebble-tool==5.0.39
+
+      - name: Install latest Pebble SDK
+        run: pebble sdk install latest
+
+      - name: Build PBW
+        run: pebble build
+
+      - name: Upload PBW artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: autopebble-pbw
+          path: build/*.pbw
