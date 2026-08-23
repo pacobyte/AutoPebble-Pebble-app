@@ -152,7 +152,7 @@ AutoPebbleWindow * initTextScreen(){
 	// Add the layers for display
 	scroll_layer_add_child(autoPebbleTextScreen->scroll_layer, text_layer_get_layer(autoPebbleTextScreen->textLayerText));
 	
-	TextLayer* textLayerTitle = text_layer_create(GRect(0,0,144,title_height));
+	TextLayer* textLayerTitle = text_layer_create(GRect(0,0,bounds.size.w,title_height));
 	text_layer_set_text_alignment(textLayerTitle, GTextAlignmentCenter); // Center the text.
 	text_layer_set_font(textLayerTitle, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text(textLayerTitle, "AutoPebble");
@@ -232,8 +232,8 @@ void finishTextScreen(AutoPebbleWindow * window){
 	//max_size_title = text_layer_get_content_size(autoPebbleTextScreen->textLayerTitle);
 	//APP_LOG(APP_LOG_LEVEL_DEBUG, "Text: '%s'; Font: %s; Width %d; Height %d",text_layer_get_text(autoPebbleTextScreen->textLayerTitle),titleFont, (int)max_size_title.w, max_size_title.h);
 	//title_height = max_size_title.h + 3;
-	text_layer_set_size(autoPebbleTextScreen->textLayerTitle, GSize(144,  title_height));
-	layer_set_frame(text_layer_get_layer(autoPebbleTextScreen->textLayerTitle), GRect(0,0,144,title_height));
+	text_layer_set_size(autoPebbleTextScreen->textLayerTitle, GSize(bounds.size.w, title_height));
+	layer_set_frame(text_layer_get_layer(autoPebbleTextScreen->textLayerTitle), GRect(0,0,bounds.size.w,title_height));
 	
 	#ifdef PBL_ROUND
   	text_layer_set_text_alignment(autoPebbleTextScreen->textLayerText, GTextAlignmentCenter);
