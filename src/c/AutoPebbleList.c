@@ -135,7 +135,7 @@ void mainMenu_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_i
 	//graphics_context_set_text_color(ctx, GColorElectricUltramarine); // This is important. <---- прикол разработчика / developer joke
 	char * font = getCurrentAutoPebbleWindow()->textFont;
 	if(!font){
-		font = FONT_KEY_GOTHIC_14;
+		font = layer_get_bounds(cell_layer).size.w >= 180 ? FONT_KEY_GOTHIC_18 : FONT_KEY_GOTHIC_14;
 	}
 	char * strToUse =  getTimeTextIfTimeVariable(NULL, getLabel(cell_index->row),font,handle_tick_list);
 	graphics_draw_text(ctx, strToUse, fonts_get_system_font(font), GRect(0,0,layer_get_frame(cell_layer).size.w,layer_get_frame(cell_layer).size.h), GTextOverflowModeTrailingEllipsis, PBL_IF_ROUND_ELSE(GTextAlignmentCenter, GTextAlignmentLeft), NULL);
@@ -146,7 +146,7 @@ void mainMenu_draw_header(GContext *ctx, const Layer *cell_layer, uint16_t secti
 { // Adding the header number as text on the header cell.
 	char * font = getCurrentAutoPebbleWindow()->titleFont;
 	if(!font){
-		font = FONT_KEY_GOTHIC_14_BOLD;
+		font = layer_get_bounds(cell_layer).size.w >= 180 ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_14_BOLD;
 	}
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing header");
 	char * strToUse =  getTimeTextIfTimeVariable(NULL, getCurrentAutoPebbleList()->headerText,font,handle_tick_list);
@@ -173,7 +173,8 @@ int16_t mainMenu_get_cell_height(struct MenuLayer *menu_layer, MenuIndex *cell_i
 			GSize max_used_size = graphics_text_layout_get_content_size(text, fonts_get_system_font(font), text_cell_rect,GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
 			size = max_used_size.h;
 		}else{*/
-		size = 25;
+		GRect menuBounds = layer_get_bounds(menu_layer_get_layer(menu_layer));
+		size = menuBounds.size.w >= 180 ? 32 : 25;
 		//}
 	}
 	return size;
@@ -268,6 +269,7 @@ void finishList(AutoPebbleWindow* mainMenu){
 	if(autoPebbleList->keepPosition){
 		index = lastIndex;
 	}else{
+		index.section = 0;
 		index.row = 0;
 	}
 	menu_layer_set_selected_index(autoPebbleList->menuLayer, index, MenuRowAlignTop, true);
