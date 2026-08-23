@@ -258,6 +258,7 @@ AutoPebbleWindow * initQuickScreen(){
 	window_set_window_handlers(window, wh);
 	Layer *window_layer = window_get_root_layer(window);
 	GRect bounds = layer_get_frame(window_layer);
+	const char * defaultTextFont = bounds.size.w >= 180 ? FONT_KEY_GOTHIC_24_BOLD : FONT_KEY_GOTHIC_18_BOLD;
 	
 	AutoPebbleWindow* autoPebbleWindow = addAutoPebbleQuickScreenWindow(window);	
 	AutoPebbleQuickScreen* autoPebbleQuickScreen = getAutoPebbleQuickScreen(autoPebbleWindow);
@@ -280,7 +281,7 @@ AutoPebbleWindow * initQuickScreen(){
 
 	TextLayer* textLayerTop = text_layer_create(GRect(0,35,bounds.size.w,30));
 	text_layer_set_text_alignment(textLayerTop, GTextAlignmentCenter); // Center the text.
-	text_layer_set_font(textLayerTop, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+	text_layer_set_font(textLayerTop, fonts_get_system_font(defaultTextFont));
 	autoPebbleQuickScreen->textLayerTop = textLayerTop;
 	layer_set_clips(text_layer_get_layer(autoPebbleQuickScreen->textLayerTop), false);
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(textLayerTop));
@@ -288,7 +289,7 @@ AutoPebbleWindow * initQuickScreen(){
 
 	TextLayer* textLayerMiddle = text_layer_create(GRect(0,76,bounds.size.w,30));
 	text_layer_set_text_alignment(textLayerMiddle, GTextAlignmentCenter); // Center the text.
-	text_layer_set_font(textLayerMiddle, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+	text_layer_set_font(textLayerMiddle, fonts_get_system_font(defaultTextFont));
 	if (strncmp(locale_str, "ru", 2) == 0){
 			text_layer_set_text(textLayerMiddle, "Загрузка Quick Screen...");
 		}
@@ -303,7 +304,7 @@ AutoPebbleWindow * initQuickScreen(){
 
 	TextLayer* textLayerBottom = text_layer_create(GRect(0,133,bounds.size.w,30));
 	text_layer_set_text_alignment(textLayerBottom, GTextAlignmentCenter); // Center the text.
-	text_layer_set_font(textLayerBottom, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+	text_layer_set_font(textLayerBottom, fonts_get_system_font(defaultTextFont));
 	autoPebbleQuickScreen->textLayerBottom = textLayerBottom;
 	layer_set_clips(text_layer_get_layer(autoPebbleQuickScreen->textLayerBottom), false);
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(textLayerBottom));
@@ -359,9 +360,11 @@ void handleQuickScreen(DictionaryIterator *received, void *context, AutoPebbleWi
 void finishQuickScreen(AutoPebbleWindow * window){
 	AutoPebbleQuickScreen* autoPebbleQuickScreen = getAutoPebbleQuickScreen(window);
 	//logString("Refreshing quick screen");
+	Layer *window_layer = window_get_root_layer(window->window);
+	GRect bounds = layer_get_frame(window_layer);
 	char * textFont = window->textFont;
 	if(!textFont){
-		textFont = FONT_KEY_GOTHIC_18_BOLD;
+		textFont = bounds.size.w >= 180 ? FONT_KEY_GOTHIC_24_BOLD : FONT_KEY_GOTHIC_18_BOLD;
 	}
 	char * titleFont = window->titleFont;
 	if(!titleFont){
@@ -383,8 +386,6 @@ void finishQuickScreen(AutoPebbleWindow * window){
 	
 	text_layer_set_text(autoPebbleQuickScreen->textLayerBottom, autoPebbleQuickScreen->labelBottom);
 	text_layer_set_font(autoPebbleQuickScreen->textLayerBottom, fonts_get_system_font(textFont));*/
-	Layer *window_layer = window_get_root_layer(window->window);
-	GRect bounds = layer_get_frame(window_layer);
 	int screenSize = bounds.size.h;
 	int totalSize = screenSize;
 	int statusBarHeight = 0;
