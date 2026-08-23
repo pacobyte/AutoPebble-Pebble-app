@@ -31,8 +31,11 @@ jobs:
       - name: Install latest Pebble SDK
         run: pebble sdk install latest
 
-      - name: Build PBW
+      - name: Build production PBW
         run: pebble build
+
+      - name: Preserve production PBW
+        run: cp build/*.pbw autopebble-production.pbw
 
       - name: Start virtual display
         run: |
@@ -40,22 +43,42 @@ jobs:
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
           sleep 2
 
-      - name: Install in Emery emulator
+      - name: Prepare CI-only demo build
+        run: |
+          cp src/c/main.c src/c/main_prod.c
+          cp ci/emulator_demo_main.c src/c/main.c
+          rm -rf build
+          pebble build
+
+      - name: Launch demo in Emery emulator
         run: |
           pebble install --emulator emery
-          sleep 5
+          sleep 2
 
-      - name: Capture Emery baseline screenshot
-        run: pebble screenshot --emulator emery --no-open emery-baseline.png
+      - name: Capture Quick Screen
+        run: |
+          pebble screenshot --emulator emery --no-open emery-quick.png
+          sleep 4
 
-      - name: Upload PBW artifact
+      - name: Capture List Screen
+        run: |
+          pebble screenshot --emulator emery --no-open emery-list.png
+          sleep 4
+
+      - name: Capture Text Screen
+        run: pebble screenshot --emulator emery --no-open emery-text.png
+
+      - name: Upload production PBW artifact
         uses: actions/upload-artifact@v4
         with:
           name: autopebble-pbw
-          path: build/*.pbw
+          path: autopebble-production.pbw
 
-      - name: Upload Emery screenshot
+      - name: Upload Emery demo screenshots
         uses: actions/upload-artifact@v4
         with:
-          name: emery-baseline-screenshot
-          path: emery-baseline.png
+          name: emery-screen-demos
+          path: |
+            emery-quick.png
+            emery-list.png
+            emery-text.png
