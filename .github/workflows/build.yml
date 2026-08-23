@@ -18,10 +18,13 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Pebble build dependencies
+      - name: Install Pebble build and emulator dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y nodejs npm libpng-dev
+          sudo apt-get install -y \
+            nodejs npm libpng-dev \
+            libsdl2-2.0-0 libglib2.0-0 libpixman-1-0 zlib1g \
+            xvfb
           python -m pip install --upgrade pip
           python -m pip install pebble-tool==5.0.39
 
@@ -31,8 +34,28 @@ jobs:
       - name: Build PBW
         run: pebble build
 
+      - name: Start virtual display
+        run: |
+          Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+          sleep 2
+
+      - name: Install in Emery emulator
+        run: |
+          pebble install --emulator emery
+          sleep 5
+
+      - name: Capture Emery baseline screenshot
+        run: pebble screenshot --emulator emery --no-open emery-baseline.png
+
       - name: Upload PBW artifact
         uses: actions/upload-artifact@v4
         with:
           name: autopebble-pbw
           path: build/*.pbw
+
+      - name: Upload Emery screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: emery-baseline-screenshot
+          path: emery-baseline.png
