@@ -68,28 +68,28 @@ jobs:
       - name: Launch demo in Emery emulator
         run: |
           pebble install --emulator emery
-          sleep 2
+          sleep 3
 
       - name: Capture long Quick Screen
         run: |
           pebble screenshot --emulator emery --no-open emery-quick-long.png
-          sleep 4
+          sleep 34
 
       - name: Capture no-title Quick Screen with explicit font override
         run: |
           pebble screenshot --emulator emery --no-open emery-quick-no-title.png
-          sleep 4
+          sleep 34
 
-      - name: Capture long List before navigation
+      - name: Capture long List before and after navigation
         run: |
           pebble screenshot --emulator emery --no-open emery-list-long-before.png
           xdotool key x
           xdotool key x
           xdotool key x
           xdotool key x
-          sleep 1
+          sleep 2
           pebble screenshot --emulator emery --no-open emery-list-long-after.png
-          sleep 5
+          sleep 43
 
       - name: Capture long Text Screen before and after scrolling
         run: |
@@ -97,9 +97,9 @@ jobs:
           xdotool key x
           xdotool key x
           xdotool key x
-          sleep 1
+          sleep 2
           pebble screenshot --emulator emery --no-open emery-text-long-after.png
-          sleep 5
+          sleep 43
 
       - name: Capture explicit legacy override List
         run: pebble screenshot --emulator emery --no-open emery-list-custom.png
