@@ -16,7 +16,6 @@ static void demo_show_quick_no_title(void *context) {
   AutoPebbleWindow *window = initQuickScreen();
   AutoPebbleQuickScreen *screen = getCurrentAutoPebbleQuickScreen();
 
-  /* Explicitly request the legacy-size font to verify caller overrides still win. */
   window->textFont = resetString(window->textFont, FONT_KEY_GOTHIC_18_BOLD);
   screen->labelTop = resetString(screen->labelTop, "Lights");
   screen->labelMiddle = resetString(screen->labelMiddle, "Garage");
@@ -86,12 +85,11 @@ static void demo_show_list_custom(void *context) {
 int main(void) {
   init();
 
-  /* Long windows keep host-side screenshot/xdotool latency from crossing scenarios. */
   app_timer_register(500, demo_show_quick_long, NULL);
-  app_timer_register(25000, demo_show_quick_no_title, NULL);
-  app_timer_register(50000, demo_show_list_long, NULL);
-  app_timer_register(80000, demo_show_text_long, NULL);
-  app_timer_register(110000, demo_show_list_custom, NULL);
+  app_timer_register(40000, demo_show_quick_no_title, NULL);
+  app_timer_register(80000, demo_show_list_long, NULL);
+  app_timer_register(130000, demo_show_text_long, NULL);
+  app_timer_register(180000, demo_show_list_custom, NULL);
 
   app_event_loop();
   deinit();
