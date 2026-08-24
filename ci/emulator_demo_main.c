@@ -5,6 +5,36 @@ static GBitmap *prototypeUp = NULL;
 static GBitmap *prototypeSelect = NULL;
 static GBitmap *prototypeDown = NULL;
 
+static const char *prototype_default_font_for_text(const char *text, GRect bounds) {
+  if (bounds.size.w < 180) {
+    return FONT_KEY_GOTHIC_18_BOLD;
+  }
+  if (!text || !text[0]) {
+    return FONT_KEY_GOTHIC_24_BOLD;
+  }
+
+  GSize largeSize = graphics_text_layout_get_content_size(
+      text,
+      fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
+      GRect(0, 0, 1000, 60),
+      GTextOverflowModeWordWrap,
+      GTextAlignmentCenter);
+  return largeSize.w <= (bounds.size.w - 12)
+      ? FONT_KEY_GOTHIC_24_BOLD
+      : FONT_KEY_GOTHIC_18_BOLD;
+}
+
+static void prototype_prepare_label(TextLayer *layer, char *text, char *explicitFont, GRect bounds) {
+  char *font = explicitFont;
+  if (!font) {
+    font = (char *)prototype_default_font_for_text(text, bounds);
+  }
+  setLayerText(layer, text, font);
+  text_layer_set_text_alignment(layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(layer, GTextOverflowModeWordWrap);
+  layer_set_clips(text_layer_get_layer(layer), true);
+}
+
 static void apply_actionbar_prototype(AutoPebbleWindow *window, AutoPebbleQuickScreen *screen) {
   Layer *root = window_get_root_layer(window->window);
   GRect bounds = layer_get_bounds(root);
@@ -26,7 +56,7 @@ static void apply_actionbar_prototype(AutoPebbleWindow *window, AutoPebbleQuickS
   if (screen->textLayerTitle && screen->labelTitle && screen->labelTitle[0]) {
     const char *titleFont = window->titleFont;
     if (!titleFont) {
-      titleFont = quickscreen_default_font_for_text(screen->labelTitle, textBounds);
+      titleFont = prototype_default_font_for_text(screen->labelTitle, textBounds);
     }
     setLayerText(screen->textLayerTitle, screen->labelTitle, (char *)titleFont);
     text_layer_set_text_alignment(screen->textLayerTitle, GTextAlignmentCenter);
@@ -63,7 +93,7 @@ static void apply_actionbar_prototype(AutoPebbleWindow *window, AutoPebbleQuickS
     int regionTop = titleBarHeight + (i * regionHeight);
     layer_set_frame(text_layer_get_layer(layers[i]),
                     GRect(horizontalPadding, regionTop, labelWidth, regionHeight));
-    quickscreen_prepare_label(layers[i], labels[i], window->textFont, labelBounds);
+    prototype_prepare_label(layers[i], labels[i], window->textFont, labelBounds);
 
     GSize labelSize = text_layer_get_content_size(layers[i]);
     int layerHeight = labelSize.h + 4;
