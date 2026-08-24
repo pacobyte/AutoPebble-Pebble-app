@@ -68,12 +68,12 @@ jobs:
       - name: Launch demo in Emery emulator
         run: |
           pebble install --emulator emery
-          sleep 3
+          sleep 2
           pebble logs --emulator emery > emery-interaction.log 2>&1 &
           echo $! > /tmp/pebble-logs.pid
           sleep 1
 
-      - name: Run ActionBar interaction diagnostics
+      - name: Run provider A-B interaction diagnostics
         run: |
           set +e
           failures=0
@@ -101,19 +101,31 @@ jobs:
             xdotool keyup "$key"
           }
 
+          echo '--- wait for original direct Window provider ---'
+          if ! wait_for_marker 'CI_DIRECT_READY'; then failures=$((failures + 1)); fi
+
+          echo '--- A: double Up through inherited direct Window provider ---'
+          pulse_key w
+          sleep 0.12
+          pulse_key w
+          sleep 0.8
+          if ! wait_for_marker 'CI_DIRECT_MULTI_UP' 10; then failures=$((failures + 1)); fi
+
+          echo '--- wait for same Quick Screen to switch to native ActionBar provider ---'
+          if ! wait_for_marker 'CI_ACTIONBAR_READY' 45; then failures=$((failures + 1)); fi
           pebble screenshot --emulator emery --no-open emery-actionbar-title.png
 
-          echo '--- single Up ---'
+          echo '--- B: single Up through ActionBar provider ---'
           pulse_key w
           if ! wait_for_marker 'CI_SINGLE_UP'; then failures=$((failures + 1)); fi
 
-          echo '--- long Up ---'
+          echo '--- B: long Up through ActionBar provider ---'
           xdotool keydown w
           sleep 1.2
           xdotool keyup w
           if ! wait_for_marker 'CI_LONG_UP'; then failures=$((failures + 1)); fi
 
-          echo '--- double Up: two explicit down/up pulses inside default multi-click window ---'
+          echo '--- B: double Up through ActionBar provider ---'
           pulse_key w
           sleep 0.12
           pulse_key w
@@ -128,16 +140,13 @@ jobs:
           sleep 0.6
 
           echo '--- wait for stacked secondary Quick Screen ---'
-          if ! wait_for_marker 'CI_SECONDARY_READY' 80; then
+          if ! wait_for_marker 'CI_SECONDARY_READY' 90; then
             failures=$((failures + 1))
           else
             pebble screenshot --emulator emery --no-open emery-actionbar-secondary.png
-
-            echo '--- secondary Select ---'
             pulse_key s
             if ! wait_for_marker 'CI_SECOND_SELECT'; then failures=$((failures + 1)); fi
 
-            echo '--- pop secondary with Back and verify primary provider/actions restore ---'
             pulse_key q
             sleep 1.0
             pebble screenshot --emulator emery --no-open emery-actionbar-restored.png
@@ -155,11 +164,11 @@ jobs:
           echo '===== End interaction log ====='
 
           if [ "$failures" -ne 0 ]; then
-            echo "ActionBar interaction diagnostics failed: $failures assertion(s)"
+            echo "Provider A-B diagnostics failed: $failures assertion(s)"
             exit 1
           fi
 
-          echo 'All ActionBar interaction diagnostics passed.'
+          echo 'All provider A-B diagnostics passed.'
 
       - name: Upload production PBW artifact
         if: always()
