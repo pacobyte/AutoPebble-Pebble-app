@@ -1,42 +1,42 @@
 
 #include "AutoPebbleWindows.h"
-	#include "Utils.h"
-	
-	#define QUICKSCREEN_TOP_LABEL  0
-	#define QUICKSCREEN_TOP_ACTION  1
-	#define QUICKSCREEN_TOP_LONG_ACTION  2
-	#define QUICKSCREEN_MIDDLE_LABEL  3
-	#define QUICKSCREEN_MIDDLE_ACTION  4
-	#define QUICKSCREEN_MIDDLE_LONG_ACTION  5
-	#define QUICKSCREEN_BOTTOM_LABEL  6
-	#define QUICKSCREEN_BOTTOM_ACTION  7
-	#define QUICKSCREEN_BOTTOM_LONG_ACTION  8
-	#define QUICKSCREEN_TOP_MULTI_ACTION  9
-	#define QUICKSCREEN_MIDDLE_MULTI_ACTION  10
-	#define QUICKSCREEN_BOTTOM_MULTI_ACTION  11
-	#define QUICKSCREEN_ACTION_PREFIX  12
-	#define QUICKSCREEN_LONG_ACTION_PREFIX  13
-	#define QUICKSCREEN_MULTI_ACTION_PREFIX  14
-	
+#include "Utils.h"
+
+#define QUICKSCREEN_TOP_LABEL  0
+#define QUICKSCREEN_TOP_ACTION  1
+#define QUICKSCREEN_TOP_LONG_ACTION  2
+#define QUICKSCREEN_MIDDLE_LABEL  3
+#define QUICKSCREEN_MIDDLE_ACTION  4
+#define QUICKSCREEN_MIDDLE_LONG_ACTION  5
+#define QUICKSCREEN_BOTTOM_LABEL  6
+#define QUICKSCREEN_BOTTOM_ACTION  7
+#define QUICKSCREEN_BOTTOM_LONG_ACTION  8
+#define QUICKSCREEN_TOP_MULTI_ACTION  9
+#define QUICKSCREEN_MIDDLE_MULTI_ACTION  10
+#define QUICKSCREEN_BOTTOM_MULTI_ACTION  11
+#define QUICKSCREEN_ACTION_PREFIX  12
+#define QUICKSCREEN_LONG_ACTION_PREFIX  13
+#define QUICKSCREEN_MULTI_ACTION_PREFIX  14
+
 AutoPebbleQuickScreen * newPebbleQuickScreen(){
 	struct AutoPebbleQuickScreen * item = (AutoPebbleQuickScreen*) malloc(sizeof(AutoPebbleQuickScreen));
 	item->labelTop = NULL;
 	item->labelMiddle = NULL;
 	item->labelBottom = NULL;
 	item->labelTitle = NULL;
-	
+
 	item->actionTop = NULL;
 	item->actionMiddle = NULL;
 	item->actionBottom = NULL;
-	
+
 	item->longActionTop = NULL;
 	item->longActionMiddle = NULL;
 	item->longActionBottom = NULL;
-	
+
 	item->multiActionTop = NULL;
 	item->multiActionMiddle = NULL;
 	item->multiActionBottom = NULL;
-	
+
 	item->commandPrefix = NULL;
 	item->longCommandPrefix = NULL;
 	item->multiCommandPrefix = NULL;
@@ -55,51 +55,50 @@ void freePebbleQuickScreen(AutoPebbleQuickScreen * item){
 	item->labelBottom = NULL;
 	free(item->labelTitle);
 	item->labelTitle = NULL;
-	
+
 	free(item->actionTop);
 	item->actionTop = NULL;
 	free(item->actionMiddle);
 	item->actionMiddle = NULL;
 	free(item->actionBottom);
 	item->actionBottom = NULL;
-	
+
 	free(item->longActionTop);
 	item->longActionTop = NULL;
 	free(item->longActionMiddle);
 	item->longActionMiddle = NULL;
 	free(item->longActionBottom);
 	item->longActionBottom = NULL;
-	
+
 	free(item->multiActionTop);
 	item->multiActionTop = NULL;
 	free(item->multiActionMiddle);
 	item->multiActionMiddle = NULL;
 	free(item->multiActionBottom);
 	item->multiActionBottom = NULL;
-	
+
 	free(item->commandPrefix);
 	item->commandPrefix = NULL;
-	
+
 	free(item->longCommandPrefix);
 	item->longCommandPrefix = NULL;
-	
+
 	free(item->multiCommandPrefix);
 	item->multiCommandPrefix = NULL;
-	
-	
-    text_layer_destroy(item->textLayerTop);
+
+	text_layer_destroy(item->textLayerTop);
 	item->textLayerTop = NULL;
-    text_layer_destroy(item->textLayerMiddle);
+	text_layer_destroy(item->textLayerMiddle);
 	item->textLayerMiddle = NULL;
-    text_layer_destroy(item->textLayerBottom);
+	text_layer_destroy(item->textLayerBottom);
 	item->textLayerBottom = NULL;
 	if(item->textLayerTitle){
 		text_layer_destroy(item->textLayerTitle);
 	}
 	item->textLayerTitle = NULL;
 }
-	
-AutoPebbleQuickScreen* getAutoPebbleQuickScreen(AutoPebbleWindow* window){	
+
+AutoPebbleQuickScreen* getAutoPebbleQuickScreen(AutoPebbleWindow* window){
 	return (AutoPebbleQuickScreen*)getAutoPebbleItem(window);
 }
 AutoPebbleQuickScreen* getCurrentAutoPebbleQuickScreen(){
@@ -128,12 +127,12 @@ void doSelectOptionAnimation(TextLayer * textLayer){
 	if(text_layer_get_text(textLayer)){
 		#ifdef PBL_COLOR
 			text_layer_set_text_color(textLayer, GColorBlack);
-    		text_layer_set_background_color(textLayer, GColorVividCerulean);
+			text_layer_set_background_color(textLayer, GColorVividCerulean);
 		#else
 			text_layer_set_text_color(textLayer, GColorWhite);
-    		text_layer_set_background_color(textLayer, GColorBlack);
+			text_layer_set_background_color(textLayer, GColorBlack);
 		#endif
-		
+
 		app_timer_register(150,deselectOption,textLayer);
 	}
 }
@@ -153,13 +152,13 @@ void quickscreen_up_multi_click_handler(ClickRecognizerRef recognizer, void *con
 void quickscreen_middle_multi_click_handler(ClickRecognizerRef recognizer, void *context) {
 	AutoPebbleWindow * window = getCurrentAutoPebbleWindow();
 	AutoPebbleQuickScreen * quickScreen = getAutoPebbleQuickScreen(window);
-	sendActionWithPrefixAndFallbackToPhone(window,  getCommandPrefix(quickScreen,quickScreen->multiCommandPrefix), quickScreen->multiActionMiddle,quickScreen->labelMiddle);
+	sendActionWithPrefixAndFallbackToPhone(window, getCommandPrefix(quickScreen,quickScreen->multiCommandPrefix), quickScreen->multiActionMiddle,quickScreen->labelMiddle);
 	doSelectOptionAnimation(quickScreen->textLayerMiddle);
 }
 void quickscreen_down_multi_click_handler(ClickRecognizerRef recognizer, void *context) {
 	AutoPebbleWindow * window = getCurrentAutoPebbleWindow();
 	AutoPebbleQuickScreen * quickScreen = getAutoPebbleQuickScreen(window);
-	sendActionWithPrefixAndFallbackToPhone(window,  getCommandPrefix(quickScreen,quickScreen->multiCommandPrefix), quickScreen->multiActionBottom,quickScreen->labelBottom);
+	sendActionWithPrefixAndFallbackToPhone(window, getCommandPrefix(quickScreen,quickScreen->multiCommandPrefix), quickScreen->multiActionBottom,quickScreen->labelBottom);
 	doSelectOptionAnimation(quickScreen->textLayerBottom);
 }
 void quickscreen_up_long_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -171,13 +170,13 @@ void quickscreen_up_long_click_handler(ClickRecognizerRef recognizer, void *cont
 void quickscreen_middle_long_click_handler(ClickRecognizerRef recognizer, void *context) {
 	AutoPebbleWindow * window = getCurrentAutoPebbleWindow();
 	AutoPebbleQuickScreen * quickScreen = getAutoPebbleQuickScreen(window);
-	sendActionWithPrefixAndFallbackToPhone(window,  getCommandPrefix(quickScreen,quickScreen->longCommandPrefix),quickScreen->longActionMiddle,quickScreen->labelMiddle);
+	sendActionWithPrefixAndFallbackToPhone(window, getCommandPrefix(quickScreen,quickScreen->longCommandPrefix),quickScreen->longActionMiddle,quickScreen->labelMiddle);
 	doSelectOptionAnimation(quickScreen->textLayerMiddle);
 }
 void quickscreen_down_long_click_handler(ClickRecognizerRef recognizer, void *context) {
 	AutoPebbleWindow * window = getCurrentAutoPebbleWindow();
 	AutoPebbleQuickScreen * quickScreen = getAutoPebbleQuickScreen(window);
-	sendActionWithPrefixAndFallbackToPhone(window,  getCommandPrefix(quickScreen,quickScreen->longCommandPrefix),quickScreen->longActionBottom,quickScreen->labelBottom);
+	sendActionWithPrefixAndFallbackToPhone(window, getCommandPrefix(quickScreen,quickScreen->longCommandPrefix),quickScreen->longActionBottom,quickScreen->labelBottom);
 	doSelectOptionAnimation(quickScreen->textLayerBottom);
 }
 void quickscreen_up_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -197,14 +196,14 @@ void quickscreen_down_click_handler(ClickRecognizerRef recognizer, void *context
 	AutoPebbleWindow * window = getCurrentAutoPebbleWindow();
 	AutoPebbleQuickScreen * quickScreen = getAutoPebbleQuickScreen(window);
 	sendActionWithPrefixAndFallbackToPhone(window, quickScreen->commandPrefix, quickScreen->actionBottom,quickScreen->labelBottom);
-	
+
 	doSelectOptionAnimation(quickScreen->textLayerBottom);
 }
 void quickscreen_back_click_handler(ClickRecognizerRef recognizer, void *context) {
 	AutoPebbleWindow * window = getCurrentAutoPebbleWindow();
 	AutoPebbleQuickScreen * quickScreen = getAutoPebbleQuickScreen(window);
 	char * prefix = quickScreen->commandPrefix;
-	char * action =  window->actionBack;
+	char * action = window->actionBack;
 	if(window->noPrefixIfCommand){
 		logString("no prefix");
 		if(contains(action, "=:=")){
@@ -212,7 +211,7 @@ void quickscreen_back_click_handler(ClickRecognizerRef recognizer, void *context
 		}
 	}
 	bool sent = sendActionWithPrefixToPhone(prefix,action);
-	if(!sent){	
+	if(!sent){
 		window_stack_pop(true);
 	}else{
 		setShouldPopWindowAfterCommand(window->doBackOnBackCommand);
@@ -222,7 +221,7 @@ void quickscreen_back_multi_click_handler(ClickRecognizerRef recognizer, void *c
 	AutoPebbleWindow * window = getCurrentAutoPebbleWindow();
 	AutoPebbleQuickScreen * quickScreen = getAutoPebbleQuickScreen(window);
 	char * prefix = quickScreen->multiCommandPrefix;
-	char * action =  window->multiActionBack;
+	char * action = window->multiActionBack;
 	if(window->noPrefixIfCommand){
 		logString("no prefix");
 		if(contains(action, "=:=")){
@@ -230,27 +229,60 @@ void quickscreen_back_multi_click_handler(ClickRecognizerRef recognizer, void *c
 		}
 	}
 	bool sent = sendActionWithPrefixToPhone(prefix,action);
-	if(!sent){			
+	if(!sent){
 		window_stack_pop(true);
 	}else{
 		setShouldPopWindowAfterCommand(window->doBackOnLongBackCommand);
 	}
 }
 void config_quickscreen_click_provider(Window *window) {
-    window_single_click_subscribe(BUTTON_ID_UP , quickscreen_up_click_handler);	
-    window_single_click_subscribe(BUTTON_ID_SELECT , quickscreen_middle_click_handler);	
-    window_single_click_subscribe(BUTTON_ID_DOWN, quickscreen_down_click_handler);	
-    window_single_click_subscribe(BUTTON_ID_BACK , quickscreen_back_click_handler);	
-	
-    window_long_click_subscribe(BUTTON_ID_UP ,0, quickscreen_up_long_click_handler, NULL);	
-    window_long_click_subscribe(BUTTON_ID_SELECT ,0, quickscreen_middle_long_click_handler, NULL);	
-    window_long_click_subscribe(BUTTON_ID_DOWN,0, quickscreen_down_long_click_handler, NULL);	
-	
-    window_multi_click_subscribe(BUTTON_ID_UP,2, 0, 0, true, quickscreen_up_multi_click_handler);	
-    window_multi_click_subscribe(BUTTON_ID_SELECT,2, 0, 0, true, quickscreen_middle_multi_click_handler);	
-    window_multi_click_subscribe(BUTTON_ID_DOWN,2, 0, 0, true, quickscreen_down_multi_click_handler);	
-    window_multi_click_subscribe(BUTTON_ID_BACK,2, 0, 0, true, quickscreen_back_multi_click_handler);	
+	window_single_click_subscribe(BUTTON_ID_UP, quickscreen_up_click_handler);
+	window_single_click_subscribe(BUTTON_ID_SELECT, quickscreen_middle_click_handler);
+	window_single_click_subscribe(BUTTON_ID_DOWN, quickscreen_down_click_handler);
+	window_single_click_subscribe(BUTTON_ID_BACK, quickscreen_back_click_handler);
+
+	window_long_click_subscribe(BUTTON_ID_UP,0, quickscreen_up_long_click_handler, NULL);
+	window_long_click_subscribe(BUTTON_ID_SELECT,0, quickscreen_middle_long_click_handler, NULL);
+	window_long_click_subscribe(BUTTON_ID_DOWN,0, quickscreen_down_long_click_handler, NULL);
+
+	window_multi_click_subscribe(BUTTON_ID_UP,2, 0, 0, true, quickscreen_up_multi_click_handler);
+	window_multi_click_subscribe(BUTTON_ID_SELECT,2, 0, 0, true, quickscreen_middle_multi_click_handler);
+	window_multi_click_subscribe(BUTTON_ID_DOWN,2, 0, 0, true, quickscreen_down_multi_click_handler);
+	window_multi_click_subscribe(BUTTON_ID_BACK,2, 0, 0, true, quickscreen_back_multi_click_handler);
 }
+
+static const char * quickscreen_default_font_for_text(const char * text, GRect bounds){
+	if(bounds.size.w < 180){
+		return FONT_KEY_GOTHIC_18_BOLD;
+	}
+	if(!text || !text[0]){
+		return FONT_KEY_GOTHIC_24_BOLD;
+	}
+
+	/* Measure the unwrapped 24px label. Keep the larger type when it genuinely
+	   fits; otherwise step down to 18px and allow the PT2 region to wrap. */
+	GSize largeSize = graphics_text_layout_get_content_size(
+		text,
+		fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
+		GRect(0, 0, 1000, 60),
+		GTextOverflowModeWordWrap,
+		GTextAlignmentCenter);
+	return largeSize.w <= (bounds.size.w - 12) ? FONT_KEY_GOTHIC_24_BOLD : FONT_KEY_GOTHIC_18_BOLD;
+}
+
+static void quickscreen_prepare_label(TextLayer * layer, char * text, char * explicitFont, GRect bounds){
+	char * font = explicitFont;
+	if(!font){
+		font = (char *)quickscreen_default_font_for_text(text, bounds);
+	}
+	setLayerText(layer, text, font);
+	text_layer_set_text_alignment(layer, GTextAlignmentCenter);
+	if(bounds.size.w >= 180){
+		text_layer_set_overflow_mode(layer, GTextOverflowModeWordWrap);
+		layer_set_clips(text_layer_get_layer(layer), true);
+	}
+}
+
 AutoPebbleWindow * initQuickScreen(){
 	const char* locale_str = i18n_get_system_locale();
 	WindowHandlers wh = { .unload = &quickScreenUnload };
@@ -259,69 +291,61 @@ AutoPebbleWindow * initQuickScreen(){
 	Layer *window_layer = window_get_root_layer(window);
 	GRect bounds = layer_get_frame(window_layer);
 	const char * defaultTextFont = bounds.size.w >= 180 ? FONT_KEY_GOTHIC_24_BOLD : FONT_KEY_GOTHIC_18_BOLD;
-	
-	AutoPebbleWindow* autoPebbleWindow = addAutoPebbleQuickScreenWindow(window);	
+
+	AutoPebbleWindow* autoPebbleWindow = addAutoPebbleQuickScreenWindow(window);
 	AutoPebbleQuickScreen* autoPebbleQuickScreen = getAutoPebbleQuickScreen(autoPebbleWindow);
 
 	TextLayer* textLayerTitle = text_layer_create(GRect(0,0,bounds.size.w,30));
-	text_layer_set_text_alignment(textLayerTitle, GTextAlignmentCenter); // Center the text.
+	text_layer_set_text_alignment(textLayerTitle, GTextAlignmentCenter);
 	text_layer_set_font(textLayerTitle, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 	text_layer_set_text(textLayerTitle, "AutoPebble");
-	;
 	#ifdef PBL_COLOR
 		text_layer_set_text_color(textLayerTitle, GColorBlack);
 		text_layer_set_background_color(textLayerTitle, GColorVividCerulean);
 	#else
 		text_layer_set_text_color(textLayerTitle, GColorWhite);
-    	text_layer_set_background_color(textLayerTitle, GColorBlack);
+		text_layer_set_background_color(textLayerTitle, GColorBlack);
 	#endif
 	autoPebbleQuickScreen->textLayerTitle = textLayerTitle;
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(textLayerTitle));
-	
 
 	TextLayer* textLayerTop = text_layer_create(GRect(0,35,bounds.size.w,30));
-	text_layer_set_text_alignment(textLayerTop, GTextAlignmentCenter); // Center the text.
+	text_layer_set_text_alignment(textLayerTop, GTextAlignmentCenter);
 	text_layer_set_font(textLayerTop, fonts_get_system_font(defaultTextFont));
 	autoPebbleQuickScreen->textLayerTop = textLayerTop;
 	layer_set_clips(text_layer_get_layer(autoPebbleQuickScreen->textLayerTop), false);
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(textLayerTop));
 
-
 	TextLayer* textLayerMiddle = text_layer_create(GRect(0,76,bounds.size.w,30));
-	text_layer_set_text_alignment(textLayerMiddle, GTextAlignmentCenter); // Center the text.
+	text_layer_set_text_alignment(textLayerMiddle, GTextAlignmentCenter);
 	text_layer_set_font(textLayerMiddle, fonts_get_system_font(defaultTextFont));
 	if (strncmp(locale_str, "ru", 2) == 0){
-			text_layer_set_text(textLayerMiddle, "Загрузка Quick Screen...");
-		}
-	else{
-			text_layer_set_text(textLayerMiddle, "Loading Quick Screen...");
-		}
-	
+		text_layer_set_text(textLayerMiddle, "Загрузка Quick Screen...");
+	}else{
+		text_layer_set_text(textLayerMiddle, "Loading Quick Screen...");
+	}
 	autoPebbleQuickScreen->textLayerMiddle = textLayerMiddle;
 	layer_set_clips(text_layer_get_layer(autoPebbleQuickScreen->textLayerMiddle), false);
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(textLayerMiddle));
 
-
 	TextLayer* textLayerBottom = text_layer_create(GRect(0,133,bounds.size.w,30));
-	text_layer_set_text_alignment(textLayerBottom, GTextAlignmentCenter); // Center the text.
+	text_layer_set_text_alignment(textLayerBottom, GTextAlignmentCenter);
 	text_layer_set_font(textLayerBottom, fonts_get_system_font(defaultTextFont));
 	autoPebbleQuickScreen->textLayerBottom = textLayerBottom;
 	layer_set_clips(text_layer_get_layer(autoPebbleQuickScreen->textLayerBottom), false);
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(textLayerBottom));
-	
+
 	window_set_click_config_provider(window, (ClickConfigProvider) config_quickscreen_click_provider);
-	
+
 	window_stack_push(window, true);
 	return autoPebbleWindow;
-	//}
 }
 void handleQuickScreen(DictionaryIterator *received, void *context, AutoPebbleWindow* window){
 	AutoPebbleQuickScreen* autoPebbleQuickScreen = getAutoPebbleQuickScreen(window);
-	Tuple *tuple = tuple = dict_read_first(received);
+	Tuple *tuple = dict_read_first(received);
 	while (tuple) {
-		//APP_LOG(APP_LOG_LEVEL_DEBUG, "Tuple %d", (int) tuple->key);
 		if(tuple->key == QUICKSCREEN_TOP_LABEL){
-			autoPebbleQuickScreen->labelTop = resetString(autoPebbleQuickScreen->labelTop, tuple->value->cstring);			
+			autoPebbleQuickScreen->labelTop = resetString(autoPebbleQuickScreen->labelTop, tuple->value->cstring);
 		}else if(tuple->key == QUICKSCREEN_TOP_ACTION){
 			autoPebbleQuickScreen->actionTop = resetString(autoPebbleQuickScreen->actionTop, tuple->value->cstring);
 		}else if(tuple->key == QUICKSCREEN_TOP_LONG_ACTION){
@@ -359,65 +383,72 @@ void handleQuickScreen(DictionaryIterator *received, void *context, AutoPebbleWi
 
 void finishQuickScreen(AutoPebbleWindow * window){
 	AutoPebbleQuickScreen* autoPebbleQuickScreen = getAutoPebbleQuickScreen(window);
-	//logString("Refreshing quick screen");
 	Layer *window_layer = window_get_root_layer(window->window);
 	GRect bounds = layer_get_frame(window_layer);
-	char * textFont = window->textFont;
-	if(!textFont){
-		textFont = bounds.size.w >= 180 ? FONT_KEY_GOTHIC_24_BOLD : FONT_KEY_GOTHIC_18_BOLD;
-	}
+	bool isWide = bounds.size.w >= 180;
+
 	char * titleFont = window->titleFont;
 	if(!titleFont){
-		titleFont = FONT_KEY_GOTHIC_24_BOLD;
+		titleFont = (char *)quickscreen_default_font_for_text(autoPebbleQuickScreen->labelTitle, bounds);
 	}
-	setLayerText(autoPebbleQuickScreen->textLayerTitle, autoPebbleQuickScreen->labelTitle, titleFont);	
-	setLayerText(autoPebbleQuickScreen->textLayerTop, autoPebbleQuickScreen->labelTop, textFont);
-	setLayerText(autoPebbleQuickScreen->textLayerMiddle, autoPebbleQuickScreen->labelMiddle, textFont);
-	setLayerText(autoPebbleQuickScreen->textLayerBottom, autoPebbleQuickScreen->labelBottom, textFont);
-	
-	/*text_layer_set_text(autoPebbleQuickScreen->textLayerTitle, autoPebbleQuickScreen->labelTitle);
-	text_layer_set_font(autoPebbleQuickScreen->textLayerTitle, fonts_get_system_font(titleFont));
-	
-	text_layer_set_text(autoPebbleQuickScreen->textLayerTop, autoPebbleQuickScreen->labelTop);
-	text_layer_set_font(autoPebbleQuickScreen->textLayerTop, fonts_get_system_font(textFont));
-	
-	text_layer_set_text(autoPebbleQuickScreen->textLayerMiddle, autoPebbleQuickScreen->labelMiddle);
-	text_layer_set_font(autoPebbleQuickScreen->textLayerMiddle, fonts_get_system_font(textFont));
-	
-	text_layer_set_text(autoPebbleQuickScreen->textLayerBottom, autoPebbleQuickScreen->labelBottom);
-	text_layer_set_font(autoPebbleQuickScreen->textLayerBottom, fonts_get_system_font(textFont));*/
-	int screenSize = bounds.size.h;
-	int totalSize = screenSize;
-	int statusBarHeight = 0;
-	if(!window->isFullScreen){
-		statusBarHeight = 16;
-	}
+
 	int titleBarHeight = 0;
-	GSize sizeTop = text_layer_get_content_size(autoPebbleQuickScreen->textLayerTop);
-	GSize sizeMiddle = text_layer_get_content_size(autoPebbleQuickScreen->textLayerMiddle);
-	GSize sizeBottom = text_layer_get_content_size(autoPebbleQuickScreen->textLayerBottom);
-	if(autoPebbleQuickScreen->labelTitle){	
+	if(autoPebbleQuickScreen->labelTitle && autoPebbleQuickScreen->labelTitle[0]){
+		setLayerText(autoPebbleQuickScreen->textLayerTitle, autoPebbleQuickScreen->labelTitle, titleFont);
+		text_layer_set_text_alignment(autoPebbleQuickScreen->textLayerTitle, GTextAlignmentCenter);
+		if(isWide){
+			text_layer_set_overflow_mode(autoPebbleQuickScreen->textLayerTitle, GTextOverflowModeWordWrap);
+		}
+		layer_set_frame(text_layer_get_layer(autoPebbleQuickScreen->textLayerTitle), GRect(0,0,bounds.size.w,isWide ? 48 : 40));
 		GSize sizeTitle = text_layer_get_content_size(autoPebbleQuickScreen->textLayerTitle);
-		titleBarHeight =sizeTitle.h + 8;
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "Title Height: %d", titleBarHeight);
+		titleBarHeight = sizeTitle.h + (isWide ? 4 : 8);
+		if(isWide && titleBarHeight > 48){
+			titleBarHeight = 48;
+		}
 		layer_set_frame(text_layer_get_layer(autoPebbleQuickScreen->textLayerTitle), GRect(0,0,bounds.size.w,titleBarHeight));
-		totalSize = totalSize - titleBarHeight;
 	}else{
-		text_layer_destroy(autoPebbleQuickScreen->textLayerTitle);
-		autoPebbleQuickScreen->textLayerTitle = NULL;		
+		/* Keep the layer alive so later refreshes can safely add a title. */
+		text_layer_set_text(autoPebbleQuickScreen->textLayerTitle, "");
+		layer_set_frame(text_layer_get_layer(autoPebbleQuickScreen->textLayerTitle), GRect(0,0,bounds.size.w,0));
 	}
-	totalSize = totalSize - statusBarHeight;
-	int halfFullScreen = totalSize / 2;
-	
-	int positionTop = 5;	
-	layer_set_frame(text_layer_get_layer(autoPebbleQuickScreen->textLayerTop), GRect(0,positionTop + titleBarHeight,bounds.size.w,sizeTop.h + 8));
-	
-	int positionMiddle = halfFullScreen - (sizeMiddle.h / 2);		
-	layer_set_frame(text_layer_get_layer(autoPebbleQuickScreen->textLayerMiddle), GRect(0,positionMiddle + titleBarHeight,bounds.size.w,sizeMiddle.h + 8));
-	
-	int positionBottom = totalSize - sizeBottom.h - 5;		
-	layer_set_frame(text_layer_get_layer(autoPebbleQuickScreen->textLayerBottom), GRect(0,positionBottom + titleBarHeight,bounds.size.w,sizeBottom.h + 8));
-	
+
+	int statusBarHeight = window->isFullScreen ? 0 : 16;
+	int availableHeight = bounds.size.h - titleBarHeight - statusBarHeight;
+	if(availableHeight < 3){
+		availableHeight = 3;
+	}
+	int regionHeight = availableHeight / 3;
+	int horizontalPadding = isWide ? 4 : 0;
+	int labelWidth = bounds.size.w - (horizontalPadding * 2);
+
+	TextLayer * layers[3] = {
+		autoPebbleQuickScreen->textLayerTop,
+		autoPebbleQuickScreen->textLayerMiddle,
+		autoPebbleQuickScreen->textLayerBottom
+	};
+	char * labels[3] = {
+		autoPebbleQuickScreen->labelTop,
+		autoPebbleQuickScreen->labelMiddle,
+		autoPebbleQuickScreen->labelBottom
+	};
+
+	for(int i = 0; i < 3; i++){
+		/* Give content-size calculation the final PT2 width and region height. */
+		layer_set_frame(text_layer_get_layer(layers[i]),
+			GRect(horizontalPadding, titleBarHeight + (i * regionHeight), labelWidth, regionHeight));
+		quickscreen_prepare_label(layers[i], labels[i], window->textFont, bounds);
+
+		GSize labelSize = text_layer_get_content_size(layers[i]);
+		int layerHeight = labelSize.h + 4;
+		if(layerHeight > regionHeight){
+			layerHeight = regionHeight;
+		}
+		int regionTop = titleBarHeight + (i * regionHeight);
+		int y = regionTop + ((regionHeight - layerHeight) / 2);
+		layer_set_frame(text_layer_get_layer(layers[i]),
+			GRect(horizontalPadding, y, labelWidth, layerHeight));
+	}
+
 	Layer *root = window_get_root_layer(window->window);
-    layer_mark_dirty(root);
+	layer_mark_dirty(root);
 }
