@@ -38,9 +38,33 @@ static void prototype_prepare_label(TextLayer *layer, char *text, char *explicit
 static void apply_actionbar_prototype(AutoPebbleWindow *window, AutoPebbleQuickScreen *screen) {
   Layer *root = window_get_root_layer(window->window);
   GRect bounds = layer_get_bounds(root);
-  int textWidth = bounds.size.w - ACTION_BAR_WIDTH;
-  GRect textBounds = bounds;
-  textBounds.size.w = textWidth;
+
+  /* Keep the title full-width. Only the three command regions give up space
+     to the ActionBar. */
+  int titleBarHeight = 0;
+  if (screen->textLayerTitle && screen->labelTitle && screen->labelTitle[0]) {
+    const char *titleFont = window->titleFont;
+    if (!titleFont) {
+      titleFont = prototype_default_font_for_text(screen->labelTitle, bounds);
+    }
+    setLayerText(screen->textLayerTitle, screen->labelTitle, (char *)titleFont);
+    text_layer_set_text_alignment(screen->textLayerTitle, GTextAlignmentCenter);
+    text_layer_set_overflow_mode(screen->textLayerTitle, GTextOverflowModeWordWrap);
+    layer_set_frame(text_layer_get_layer(screen->textLayerTitle), GRect(0, 0, bounds.size.w, 48));
+    GSize titleSize = text_layer_get_content_size(screen->textLayerTitle);
+    titleBarHeight = titleSize.h + 4;
+    if (titleBarHeight > 48) {
+      titleBarHeight = 48;
+    }
+    layer_set_frame(text_layer_get_layer(screen->textLayerTitle),
+                    GRect(0, 0, bounds.size.w, titleBarHeight));
+  }
+
+  int statusBarHeight = window->isFullScreen ? 0 : 16;
+  int availableHeight = bounds.size.h - titleBarHeight - statusBarHeight;
+  if (availableHeight < 3) {
+    availableHeight = 3;
+  }
 
   prototypeActionBar = action_bar_layer_create();
   prototypeUp = gbitmap_create_with_resource(RESOURCE_ID_ACTIONBAR_UP);
@@ -52,26 +76,15 @@ static void apply_actionbar_prototype(AutoPebbleWindow *window, AutoPebbleQuickS
   action_bar_layer_set_icon(prototypeActionBar, BUTTON_ID_DOWN, prototypeDown);
   action_bar_layer_add_to_window(prototypeActionBar, window->window);
 
-  int titleBarHeight = 0;
-  if (screen->textLayerTitle && screen->labelTitle && screen->labelTitle[0]) {
-    const char *titleFont = window->titleFont;
-    if (!titleFont) {
-      titleFont = prototype_default_font_for_text(screen->labelTitle, textBounds);
-    }
-    setLayerText(screen->textLayerTitle, screen->labelTitle, (char *)titleFont);
-    text_layer_set_text_alignment(screen->textLayerTitle, GTextAlignmentCenter);
-    text_layer_set_overflow_mode(screen->textLayerTitle, GTextOverflowModeWordWrap);
-    layer_set_frame(text_layer_get_layer(screen->textLayerTitle), GRect(0, 0, textWidth, 48));
-    GSize titleSize = text_layer_get_content_size(screen->textLayerTitle);
-    titleBarHeight = titleSize.h + 4;
-    if (titleBarHeight > 48) {
-      titleBarHeight = 48;
-    }
-    layer_set_frame(text_layer_get_layer(screen->textLayerTitle), GRect(0, 0, textWidth, titleBarHeight));
-  }
+  /* ActionBar occupies only the command area below the full-width title. */
+  Layer *actionBarLayer = action_bar_layer_get_layer(prototypeActionBar);
+  layer_set_frame(actionBarLayer,
+                  GRect(bounds.size.w - ACTION_BAR_WIDTH,
+                        titleBarHeight,
+                        ACTION_BAR_WIDTH,
+                        availableHeight));
 
-  int statusBarHeight = window->isFullScreen ? 0 : 16;
-  int availableHeight = bounds.size.h - titleBarHeight - statusBarHeight;
+  int textWidth = bounds.size.w - ACTION_BAR_WIDTH;
   int regionHeight = availableHeight / 3;
   int horizontalPadding = 4;
   int labelWidth = textWidth - (horizontalPadding * 2);
@@ -87,8 +100,7 @@ static void apply_actionbar_prototype(AutoPebbleWindow *window, AutoPebbleQuickS
     screen->labelBottom
   };
 
-  GRect labelBounds = textBounds;
-  labelBounds.size.w = labelWidth;
+  GRect labelBounds = GRect(0, 0, labelWidth, regionHeight);
   for (int i = 0; i < 3; i++) {
     int regionTop = titleBarHeight + (i * regionHeight);
     layer_set_frame(text_layer_get_layer(layers[i]),
@@ -105,6 +117,8 @@ static void apply_actionbar_prototype(AutoPebbleWindow *window, AutoPebbleQuickS
                     GRect(horizontalPadding, y, labelWidth, layerHeight));
   }
 
+  /* Keep the title visually above the command-area ActionBar. */
+  layer_add_child(root, text_layer_get_layer(screen->textLayerTitle));
   layer_mark_dirty(root);
 }
 
