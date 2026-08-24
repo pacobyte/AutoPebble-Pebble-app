@@ -498,12 +498,22 @@ void finishQuickScreen(AutoPebbleWindow * window){
 	AutoPebbleQuickScreen* autoPebbleQuickScreen = getAutoPebbleQuickScreen(window);
 	Layer *window_layer = window_get_root_layer(window->window);
 	GRect bounds = layer_get_frame(window_layer);
-	bool isWide = bounds.size.w >= 180;
 
-	if(isWide){
+	/* Chalk is also 180px wide, so width alone is not a PT2 discriminator.
+	   Keep the native ActionBar path on wide rectangular watches only. */
+	bool useNativeActionBar = false;
+	#ifndef PBL_ROUND
+		useNativeActionBar = bounds.size.w >= 180;
+	#endif
+
+	if(useNativeActionBar){
 		finishQuickScreenPT2(window, autoPebbleQuickScreen, bounds);
 		return;
 	}
+
+	/* Preserve the locked baseline's wide adaptive layout on Chalk while all
+	   narrower legacy platforms continue to use their existing geometry. */
+	bool isWide = bounds.size.w >= 180;
 
 	char * titleFont = window->titleFont;
 	if(!titleFont){
@@ -514,9 +524,15 @@ void finishQuickScreen(AutoPebbleWindow * window){
 	if(autoPebbleQuickScreen->labelTitle && autoPebbleQuickScreen->labelTitle[0]){
 		setLayerText(autoPebbleQuickScreen->textLayerTitle, autoPebbleQuickScreen->labelTitle, titleFont);
 		text_layer_set_text_alignment(autoPebbleQuickScreen->textLayerTitle, GTextAlignmentCenter);
-		layer_set_frame(text_layer_get_layer(autoPebbleQuickScreen->textLayerTitle), GRect(0,0,bounds.size.w,40));
+		if(isWide){
+			text_layer_set_overflow_mode(autoPebbleQuickScreen->textLayerTitle, GTextOverflowModeWordWrap);
+		}
+		layer_set_frame(text_layer_get_layer(autoPebbleQuickScreen->textLayerTitle), GRect(0,0,bounds.size.w,isWide ? 48 : 40));
 		GSize sizeTitle = text_layer_get_content_size(autoPebbleQuickScreen->textLayerTitle);
-		titleBarHeight = sizeTitle.h + 8;
+		titleBarHeight = sizeTitle.h + (isWide ? 4 : 8);
+		if(isWide && titleBarHeight > 48){
+			titleBarHeight = 48;
+		}
 		layer_set_frame(text_layer_get_layer(autoPebbleQuickScreen->textLayerTitle), GRect(0,0,bounds.size.w,titleBarHeight));
 	}else{
 		/* Keep the layer alive so later refreshes can safely add a title. */
@@ -530,8 +546,8 @@ void finishQuickScreen(AutoPebbleWindow * window){
 		availableHeight = 3;
 	}
 	int regionHeight = availableHeight / 3;
-	int horizontalPadding = 0;
-	int labelWidth = bounds.size.w;
+	int horizontalPadding = isWide ? 4 : 0;
+	int labelWidth = bounds.size.w - (horizontalPadding * 2);
 
 	TextLayer * layers[3] = {
 		autoPebbleQuickScreen->textLayerTop,
@@ -545,6 +561,7 @@ void finishQuickScreen(AutoPebbleWindow * window){
 	};
 
 	for(int i = 0; i < 3; i++){
+		/* Give content-size calculation the final wide-platform region first. */
 		layer_set_frame(text_layer_get_layer(layers[i]),
 			GRect(horizontalPadding, titleBarHeight + (i * regionHeight), labelWidth, regionHeight));
 		quickscreen_prepare_label(layers[i], labels[i], window->textFont, bounds);
