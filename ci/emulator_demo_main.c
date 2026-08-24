@@ -1,22 +1,62 @@
 #include "main_prod.inc"
 
+static ActionBarLayer *prototypeActionBar = NULL;
+static GBitmap *prototypeUp = NULL;
+static GBitmap *prototypeSelect = NULL;
+static GBitmap *prototypeDown = NULL;
+
+static void apply_actionbar_prototype(AutoPebbleWindow *window, AutoPebbleQuickScreen *screen) {
+  Layer *root = window_get_root_layer(window->window);
+  GRect bounds = layer_get_bounds(root);
+  int textWidth = bounds.size.w - ACTION_BAR_WIDTH;
+
+  prototypeActionBar = action_bar_layer_create();
+  prototypeUp = gbitmap_create_with_resource(RESOURCE_ID_ACTIONBAR_UP);
+  prototypeSelect = gbitmap_create_with_resource(RESOURCE_ID_ACTIONBAR_SELECT);
+  prototypeDown = gbitmap_create_with_resource(RESOURCE_ID_ACTIONBAR_DOWN);
+
+  action_bar_layer_set_icon(prototypeActionBar, BUTTON_ID_UP, prototypeUp);
+  action_bar_layer_set_icon(prototypeActionBar, BUTTON_ID_SELECT, prototypeSelect);
+  action_bar_layer_set_icon(prototypeActionBar, BUTTON_ID_DOWN, prototypeDown);
+  action_bar_layer_add_to_window(prototypeActionBar, window->window);
+
+  TextLayer *layers[4] = {
+    screen->textLayerTitle,
+    screen->textLayerTop,
+    screen->textLayerMiddle,
+    screen->textLayerBottom
+  };
+
+  for (int i = 0; i < 4; i++) {
+    if (!layers[i]) {
+      continue;
+    }
+    Layer *layer = text_layer_get_layer(layers[i]);
+    GRect frame = layer_get_frame(layer);
+    frame.size.w = textWidth;
+    layer_set_frame(layer, frame);
+  }
+
+  layer_mark_dirty(root);
+}
+
 static void demo_show_quick_long(void *context) {
   AutoPebbleWindow *window = initQuickScreen();
   AutoPebbleQuickScreen *screen = getCurrentAutoPebbleQuickScreen();
 
-  screen->labelTitle = resetString(screen->labelTitle, "Quick Screen Long Title Test");
-  screen->labelTop = resetString(screen->labelTop, "UP: Bedroom & Hallway Lights");
-  screen->labelMiddle = resetString(screen->labelMiddle, "SELECT: Open the Garage Door");
-  screen->labelBottom = resetString(screen->labelBottom, "DOWN: Upstairs Climate Control");
+  screen->labelTitle = resetString(screen->labelTitle, "ActionBar Prototype");
+  screen->labelTop = resetString(screen->labelTop, "Bedroom & Hallway Lights");
+  screen->labelMiddle = resetString(screen->labelMiddle, "Open the Garage Door");
+  screen->labelBottom = resetString(screen->labelBottom, "Upstairs Climate Control");
 
   finishQuickScreen(window);
+  apply_actionbar_prototype(window, screen);
 }
 
 static void demo_show_quick_no_title(void *context) {
   AutoPebbleWindow *window = initQuickScreen();
   AutoPebbleQuickScreen *screen = getCurrentAutoPebbleQuickScreen();
 
-  /* Explicitly request the legacy-size font to verify caller overrides still win. */
   window->textFont = resetString(window->textFont, FONT_KEY_GOTHIC_18_BOLD);
   screen->labelTop = resetString(screen->labelTop, "Lights");
   screen->labelMiddle = resetString(screen->labelMiddle, "Garage");
@@ -84,9 +124,6 @@ static void demo_show_list_custom(void *context) {
 }
 
 int main(void) {
-  /* CI-only: keep one inert Window on the stack so Pebble does not return to
-     system UI before the first demo timer fires. We still intentionally skip
-     production init(), which subscribes to phone/Bluetooth state. */
   Window *keeper = window_create();
   window_stack_push(keeper, false);
 
@@ -97,6 +134,19 @@ int main(void) {
   app_timer_register(160000, demo_show_list_custom, NULL);
 
   app_event_loop();
+
+  if (prototypeActionBar) {
+    action_bar_layer_destroy(prototypeActionBar);
+  }
+  if (prototypeUp) {
+    gbitmap_destroy(prototypeUp);
+  }
+  if (prototypeSelect) {
+    gbitmap_destroy(prototypeSelect);
+  }
+  if (prototypeDown) {
+    gbitmap_destroy(prototypeDown);
+  }
   window_destroy(keeper);
   return 0;
 }
