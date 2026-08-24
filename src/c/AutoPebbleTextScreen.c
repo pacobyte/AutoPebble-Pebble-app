@@ -139,18 +139,23 @@ static void configure_text_body(AutoPebbleTextScreen * screen, const char * text
 
 	screen->textLayerText = text_layer_create(GRect(horizontalPadding, vert_scroll_text_padding, textWidth, 2000));
 	setLayerText(screen->textLayerText, (char *)(text ? text : ""), (char *)textFont);
+	scroll_layer_add_child(screen->scroll_layer, text_layer_get_layer(screen->textLayerText));
 
 	#ifdef PBL_ROUND
 		text_layer_set_text_alignment(screen->textLayerText, GTextAlignmentCenter);
-		uint8_t inset = 4;
-		text_layer_enable_screen_text_flow_and_paging(screen->textLayerText, inset);
+		text_layer_enable_screen_text_flow_and_paging(screen->textLayerText, 4);
+	#else
+		/* On PT2/Emery, use Pebble's pagination-aware text layout so page
+		   boundaries do not cut through glyphs when Up/Down is pressed. */
+		if(bounds.size.w >= 180){
+			text_layer_enable_screen_text_flow_and_paging(screen->textLayerText, 0);
+		}
 	#endif
 
 	GSize bodySize = text_layer_get_content_size(screen->textLayerText);
 	bodySize.h += 8;
 	text_layer_set_size(screen->textLayerText, GSize(textWidth, bodySize.h));
 
-	scroll_layer_add_child(screen->scroll_layer, text_layer_get_layer(screen->textLayerText));
 	scroll_layer_set_content_size(screen->scroll_layer,
 		GSize(bounds.size.w, bodySize.h + (vert_scroll_text_padding * 2)));
 }
@@ -183,6 +188,10 @@ AutoPebbleWindow * initTextScreen(){
 	scroll_layer_set_click_config_onto_window(autoPebbleTextScreen->scroll_layer, window);
 	#ifdef PBL_ROUND
 		scroll_layer_set_paging(autoPebbleTextScreen->scroll_layer, true);
+	#else
+		if(bounds.size.w >= 180){
+			scroll_layer_set_paging(autoPebbleTextScreen->scroll_layer, true);
+		}
 	#endif
 
 	const char * loadingText;
@@ -251,6 +260,12 @@ void finishTextScreen(AutoPebbleWindow * window){
 
 	GRect scrollBounds = GRect(0, titleHeight, bounds.size.w, bounds.size.h - titleHeight);
 	layer_set_frame(scroll_layer_get_layer(autoPebbleTextScreen->scroll_layer), scrollBounds);
+
+	#ifdef PBL_ROUND
+		scroll_layer_set_paging(autoPebbleTextScreen->scroll_layer, true);
+	#else
+		scroll_layer_set_paging(autoPebbleTextScreen->scroll_layer, bounds.size.w >= 180);
+	#endif
 
 	configure_text_body(autoPebbleTextScreen, autoPebbleTextScreen->labelText, textFont, bounds);
 
