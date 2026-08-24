@@ -69,9 +69,34 @@ jobs:
         run: |
           pebble install --emulator emery
           sleep 3
+          pebble logs --emulator emery > emery-interaction.log 2>&1 &
+          echo $! > /tmp/pebble-logs.pid
+          sleep 1
 
       - name: Capture native ActionBar with title
         run: pebble screenshot --emulator emery --no-open emery-actionbar-title.png
+
+      - name: Verify single Up click
+        run: |
+          xdotool key w
+          sleep 2
+          grep -q 'CI_SINGLE_UP' emery-interaction.log
+
+      - name: Verify long Up click
+        run: |
+          xdotool keydown w
+          sleep 1.2
+          xdotool keyup w
+          sleep 2
+          grep -q 'CI_LONG_UP' emery-interaction.log
+
+      - name: Verify double Up click
+        run: |
+          xdotool key w
+          sleep 0.12
+          xdotool key w
+          sleep 2
+          grep -q 'CI_MULTI_UP' emery-interaction.log
 
       - name: Capture native Up-button press feedback
         run: |
@@ -79,12 +104,19 @@ jobs:
           sleep 0.1
           pebble screenshot --emulator emery --no-open emery-actionbar-up-pressed.png
           xdotool keyup w
-          sleep 25
+          sleep 2
 
-      - name: Capture native ActionBar without title
+      - name: Verify stacked Quick Screen and restore
         run: |
-          sleep 4
-          pebble screenshot --emulator emery --no-open emery-actionbar-no-title.png
+          sleep 12
+          grep -q 'CI_SECONDARY_READY' emery-interaction.log
+          pebble screenshot --emulator emery --no-open emery-actionbar-secondary.png
+          xdotool key q
+          sleep 2
+          pebble screenshot --emulator emery --no-open emery-actionbar-restored.png
+          xdotool key s
+          sleep 2
+          grep -q 'CI_SINGLE_SELECT' emery-interaction.log
 
       - name: Upload production PBW artifact
         uses: actions/upload-artifact@v4
@@ -92,11 +124,13 @@ jobs:
           name: autopebble-pbw
           path: autopebble-production.pbw
 
-      - name: Upload native ActionBar prototype screenshots
+      - name: Upload native ActionBar hardening artifacts
         uses: actions/upload-artifact@v4
         with:
           name: emery-actionbar-native
           path: |
             emery-actionbar-title.png
             emery-actionbar-up-pressed.png
-            emery-actionbar-no-title.png
+            emery-actionbar-secondary.png
+            emery-actionbar-restored.png
+            emery-interaction.log
