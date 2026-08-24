@@ -43,7 +43,7 @@ jobs:
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
           sleep 2
 
-      - name: Prepare CI-only demo build
+      - name: Prepare CI-only native ActionBar demo
         run: |
           cp src/c/main.c src/c/main_prod.inc
           python - <<'PY'
@@ -70,39 +70,21 @@ jobs:
           pebble install --emulator emery
           sleep 3
 
-      - name: Capture long Quick Screen
-        run: |
-          pebble screenshot --emulator emery --no-open emery-quick-long.png
-          sleep 34
+      - name: Capture native ActionBar with title
+        run: pebble screenshot --emulator emery --no-open emery-actionbar-title.png
 
-      - name: Capture no-title Quick Screen with explicit font override
+      - name: Capture native Up-button press feedback
         run: |
-          pebble screenshot --emulator emery --no-open emery-quick-no-title.png
-          sleep 34
+          xdotool keydown w
+          sleep 0.1
+          pebble screenshot --emulator emery --no-open emery-actionbar-up-pressed.png
+          xdotool keyup w
+          sleep 25
 
-      - name: Capture long List before and after navigation
+      - name: Capture native ActionBar without title
         run: |
-          pebble screenshot --emulator emery --no-open emery-list-long-before.png
-          xdotool key x
-          xdotool key x
-          xdotool key x
-          xdotool key x
-          sleep 2
-          pebble screenshot --emulator emery --no-open emery-list-long-after.png
-          sleep 43
-
-      - name: Capture long Text Screen before and after scrolling
-        run: |
-          pebble screenshot --emulator emery --no-open emery-text-long-before.png
-          xdotool key x
-          xdotool key x
-          xdotool key x
-          sleep 2
-          pebble screenshot --emulator emery --no-open emery-text-long-after.png
-          sleep 43
-
-      - name: Capture explicit legacy override List
-        run: pebble screenshot --emulator emery --no-open emery-list-custom.png
+          sleep 4
+          pebble screenshot --emulator emery --no-open emery-actionbar-no-title.png
 
       - name: Upload production PBW artifact
         uses: actions/upload-artifact@v4
@@ -110,15 +92,11 @@ jobs:
           name: autopebble-pbw
           path: autopebble-production.pbw
 
-      - name: Upload Emery hardening screenshots
+      - name: Upload native ActionBar prototype screenshots
         uses: actions/upload-artifact@v4
         with:
-          name: emery-hardening
+          name: emery-actionbar-native
           path: |
-            emery-quick-long.png
-            emery-quick-no-title.png
-            emery-list-long-before.png
-            emery-list-long-after.png
-            emery-text-long-before.png
-            emery-text-long-after.png
-            emery-list-custom.png
+            emery-actionbar-title.png
+            emery-actionbar-up-pressed.png
+            emery-actionbar-no-title.png
