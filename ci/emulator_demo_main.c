@@ -84,9 +84,12 @@ static void demo_show_list_custom(void *context) {
 }
 
 int main(void) {
-  /* CI-only: intentionally skip production init().  The real app subscribes to
-     phone/Bluetooth state and closes its windows when disconnected; a headless
-     emulator has no paired phone, which makes long rendering tests nondeterministic. */
+  /* CI-only: keep one inert Window on the stack so Pebble does not return to
+     system UI before the first demo timer fires. We still intentionally skip
+     production init(), which subscribes to phone/Bluetooth state. */
+  Window *keeper = window_create();
+  window_stack_push(keeper, false);
+
   app_timer_register(500, demo_show_quick_long, NULL);
   app_timer_register(25000, demo_show_quick_no_title, NULL);
   app_timer_register(60000, demo_show_list_long, NULL);
@@ -94,5 +97,6 @@ int main(void) {
   app_timer_register(160000, demo_show_list_custom, NULL);
 
   app_event_loop();
+  window_destroy(keeper);
   return 0;
 }
