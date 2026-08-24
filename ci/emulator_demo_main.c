@@ -16,6 +16,7 @@ static void demo_show_quick_no_title(void *context) {
   AutoPebbleWindow *window = initQuickScreen();
   AutoPebbleQuickScreen *screen = getCurrentAutoPebbleQuickScreen();
 
+  /* Explicitly request the legacy-size font to verify caller overrides still win. */
   window->textFont = resetString(window->textFont, FONT_KEY_GOTHIC_18_BOLD);
   screen->labelTop = resetString(screen->labelTop, "Lights");
   screen->labelMiddle = resetString(screen->labelMiddle, "Garage");
@@ -83,15 +84,15 @@ static void demo_show_list_custom(void *context) {
 }
 
 int main(void) {
-  init();
-
+  /* CI-only: intentionally skip production init().  The real app subscribes to
+     phone/Bluetooth state and closes its windows when disconnected; a headless
+     emulator has no paired phone, which makes long rendering tests nondeterministic. */
   app_timer_register(500, demo_show_quick_long, NULL);
-  app_timer_register(40000, demo_show_quick_no_title, NULL);
-  app_timer_register(80000, demo_show_list_long, NULL);
-  app_timer_register(130000, demo_show_text_long, NULL);
-  app_timer_register(180000, demo_show_list_custom, NULL);
+  app_timer_register(25000, demo_show_quick_no_title, NULL);
+  app_timer_register(60000, demo_show_list_long, NULL);
+  app_timer_register(110000, demo_show_text_long, NULL);
+  app_timer_register(160000, demo_show_list_custom, NULL);
 
   app_event_loop();
-  deinit();
   return 0;
 }
