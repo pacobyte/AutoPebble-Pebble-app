@@ -140,6 +140,10 @@ typedef struct AutoPebbleQuickScreen{
 	TextLayer* textLayerMiddle;
 	TextLayer* textLayerBottom;
 	TextLayer* textLayerTitle;
+	ActionBarLayer* actionBar;
+	GBitmap* actionBarUp;
+	GBitmap* actionBarSelect;
+	GBitmap* actionBarDown;
 }AutoPebbleQuickScreen;
 
 AutoPebbleQuickScreen * newPebbleQuickScreen();
