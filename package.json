@@ -15,6 +15,21 @@
                     "menuIcon": true,
                     "name": "AUTOPEBBLE_ICON",
                     "type": "bitmap"
+                },
+                {
+                    "file": "images/actionbar_up.png",
+                    "name": "ACTIONBAR_UP",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/actionbar_select.png",
+                    "name": "ACTIONBAR_SELECT",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/actionbar_down.png",
+                    "name": "ACTIONBAR_DOWN",
+                    "type": "bitmap"
                 }
             ]
         },
