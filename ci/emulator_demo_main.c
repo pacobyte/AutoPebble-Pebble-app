@@ -10,18 +10,26 @@ static GBitmap *prototypeSelect = NULL;
 static GBitmap *prototypeDown = NULL;
 
 static const int emery_action_centers[3] = {54, 114, 174};
+static const int emery_action_max_height = 58;
 
+/* Prefer comfortably readable PT2 typography. Measure at the real content
+   width and keep 28 Bold whenever the wrapped label fits inside its native
+   button slot; fall back only to 24 Bold, never 18px for normal PT2 actions. */
 static const char *prototype_font_for_label(const char *text, int width) {
   if (!text || !text[0]) {
-    return FONT_KEY_GOTHIC_24_BOLD;
+    return FONT_KEY_GOTHIC_28_BOLD;
   }
-  GSize size = graphics_text_layout_get_content_size(
+
+  GSize large = graphics_text_layout_get_content_size(
       text,
-      fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-      GRect(0, 0, 1000, 60),
+      fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+      GRect(0, 0, width, 120),
       GTextOverflowModeWordWrap,
       GTextAlignmentCenter);
-  return size.w <= width ? FONT_KEY_GOTHIC_24_BOLD : FONT_KEY_GOTHIC_18_BOLD;
+
+  return large.h <= emery_action_max_height
+      ? FONT_KEY_GOTHIC_28_BOLD
+      : FONT_KEY_GOTHIC_24_BOLD;
 }
 
 static void prototype_click_config_provider(void *context) {
@@ -54,17 +62,17 @@ static void apply_native_actionbar_prototype(AutoPebbleWindow *window,
   action_bar_layer_set_icon_animated(prototypeActionBar, BUTTON_ID_DOWN,
                                      prototypeDown, true);
 
-  /* The title is ordinary content, never a separate colored bar. */
+  /* A supplied title is ordinary context content, never a separate bar. */
   text_layer_set_background_color(screen->textLayerTitle, GColorWhite);
   text_layer_set_text_color(screen->textLayerTitle, GColorBlack);
   if (show_title && screen->labelTitle && screen->labelTitle[0]) {
     setLayerText(screen->textLayerTitle, screen->labelTitle,
-                 FONT_KEY_GOTHIC_14_BOLD);
+                 FONT_KEY_GOTHIC_18_BOLD);
     text_layer_set_text_alignment(screen->textLayerTitle, GTextAlignmentCenter);
     text_layer_set_overflow_mode(screen->textLayerTitle,
                                  GTextOverflowModeTrailingEllipsis);
     layer_set_frame(text_layer_get_layer(screen->textLayerTitle),
-                    GRect(horizontal_padding, 2, label_width, 22));
+                    GRect(horizontal_padding, 0, label_width, 26));
   } else {
     text_layer_set_text(screen->textLayerTitle, "");
     layer_set_frame(text_layer_get_layer(screen->textLayerTitle),
@@ -83,7 +91,6 @@ static void apply_native_actionbar_prototype(AutoPebbleWindow *window,
   };
 
   for (int i = 0; i < 3; i++) {
-    const int max_height = 48;
     const char *font = window->textFont;
     if (!font) {
       font = prototype_font_for_label(labels[i], label_width - 4);
@@ -94,11 +101,12 @@ static void apply_native_actionbar_prototype(AutoPebbleWindow *window,
     layer_set_clips(text_layer_get_layer(layers[i]), true);
 
     layer_set_frame(text_layer_get_layer(layers[i]),
-                    GRect(horizontal_padding, 0, label_width, max_height));
+                    GRect(horizontal_padding, 0, label_width,
+                          emery_action_max_height));
     GSize content = text_layer_get_content_size(layers[i]);
     int height = content.h + 2;
-    if (height > max_height) {
-      height = max_height;
+    if (height > emery_action_max_height) {
+      height = emery_action_max_height;
     }
     int y = emery_action_centers[i] - (height / 2);
     layer_set_frame(text_layer_get_layer(layers[i]),
