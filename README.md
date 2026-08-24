@@ -24,9 +24,9 @@ For more details see:
 
 ## Pebble Time 2 / Emery port
 
-Active PT2 work is on the `pebble-time-2` branch. The port adds native `emery` / 200×228 support while preserving the existing AutoPebble UUID, AppMessage protocol, Android companion behavior, and Tasker-facing semantics.
+Active PT2 work is on the `pebble-time-2` branch. The port adds native `emery` / 200×228 support while preserving the existing AutoPebble UUID, AppMessage protocol, Android companion behavior, and Tasker-facing semantics. The PT2 Quick Screen now uses a native Pebble `ActionBarLayer`; Emery interaction/lifecycle hardening and a Chalk non-ActionBar regression both pass in CI.
 
-See **[docs/pebble-time-2-port.md](docs/pebble-time-2-port.md)** for current status, design decisions, emulator/CI testing, curated screenshots, the isolated ActionBar experiment, and remaining hardware/release work.
+See **[docs/pebble-time-2-port.md](docs/pebble-time-2-port.md)** for current status, design decisions, emulator/CI testing, curated screenshots, and remaining physical-watch/release work.
 
 ## Resources
 
