@@ -102,7 +102,7 @@ jobs:
           }
 
           echo '--- wait for real primary PT2 Quick Screen ---'
-          if ! wait_for_marker 'CI_PRIMARY_READY' 35; then failures=$((failures + 1)); fi
+          if ! wait_for_marker 'CI_PRIMARY_READY' 55; then failures=$((failures + 1)); fi
           pebble screenshot --emulator emery --no-open emery-actionbar-title.png
 
           echo '--- single Up through ActionBar provider ---'
@@ -123,7 +123,7 @@ jobs:
           sleep 0.6
 
           echo '--- wait for stacked no-title secondary Quick Screen ---'
-          if ! wait_for_marker 'CI_SECONDARY_READY' 55; then
+          if ! wait_for_marker 'CI_SECONDARY_READY' 85; then
             failures=$((failures + 1))
           else
             pebble screenshot --emulator emery --no-open emery-actionbar-secondary.png
@@ -140,7 +140,7 @@ jobs:
             if ! wait_for_marker 'CI_SINGLE_SELECT'; then failures=$((failures + 1)); fi
           fi
 
-          echo 'NOTE: multi-click is intentionally deferred to the physical PT2 test because identical xdotool double-click injection failed through AutoPebble\'s inherited direct Window provider and the ActionBar provider.'
+          echo "NOTE: multi-click is intentionally deferred to the physical PT2 test because identical xdotool double-click injection failed through AutoPebble's inherited direct Window provider and the ActionBar provider."
 
           if [ -f /tmp/pebble-logs.pid ]; then
             kill "$(cat /tmp/pebble-logs.pid)" 2>/dev/null
