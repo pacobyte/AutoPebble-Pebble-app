@@ -18,6 +18,8 @@
 #define QUICKSCREEN_LONG_ACTION_PREFIX  13
 #define QUICKSCREEN_MULTI_ACTION_PREFIX  14
 
+#define QUICKSCREEN_PT2_ACTION_HEIGHT 58
+
 AutoPebbleQuickScreen * newPebbleQuickScreen(){
 	struct AutoPebbleQuickScreen * item = (AutoPebbleQuickScreen*) malloc(sizeof(AutoPebbleQuickScreen));
 	item->labelTop = NULL;
@@ -44,6 +46,10 @@ AutoPebbleQuickScreen * newPebbleQuickScreen(){
 	item->textLayerMiddle = NULL;
 	item->textLayerBottom = NULL;
 	item->textLayerTitle = NULL;
+	item->actionBar = NULL;
+	item->actionBarUp = NULL;
+	item->actionBarSelect = NULL;
+	item->actionBarDown = NULL;
 	return item;
 }
 void freePebbleQuickScreen(AutoPebbleQuickScreen * item){
@@ -86,6 +92,24 @@ void freePebbleQuickScreen(AutoPebbleQuickScreen * item){
 	free(item->multiCommandPrefix);
 	item->multiCommandPrefix = NULL;
 
+	/* ActionBar retains the bitmap pointers, so destroy it first. */
+	if(item->actionBar){
+		action_bar_layer_destroy(item->actionBar);
+		item->actionBar = NULL;
+	}
+	if(item->actionBarUp){
+		gbitmap_destroy(item->actionBarUp);
+		item->actionBarUp = NULL;
+	}
+	if(item->actionBarSelect){
+		gbitmap_destroy(item->actionBarSelect);
+		item->actionBarSelect = NULL;
+	}
+	if(item->actionBarDown){
+		gbitmap_destroy(item->actionBarDown);
+		item->actionBarDown = NULL;
+	}
+
 	text_layer_destroy(item->textLayerTop);
 	item->textLayerTop = NULL;
 	text_layer_destroy(item->textLayerMiddle);
@@ -124,6 +148,11 @@ void deselectOption(void *data){
 }
 
 void doSelectOptionAnimation(TextLayer * textLayer){
+	AutoPebbleQuickScreen * quickScreen = getCurrentAutoPebbleQuickScreen();
+	/* PT2 uses Pebble's native ActionBar press animation instead. */
+	if(quickScreen && quickScreen->actionBar){
+		return;
+	}
 	if(text_layer_get_text(textLayer)){
 		#ifdef PBL_COLOR
 			text_layer_set_text_color(textLayer, GColorBlack);
@@ -251,6 +280,10 @@ void config_quickscreen_click_provider(Window *window) {
 	window_multi_click_subscribe(BUTTON_ID_BACK,2, 0, 0, true, quickscreen_back_multi_click_handler);
 }
 
+static void quickscreen_actionbar_click_config_provider(void *context){
+	config_quickscreen_click_provider((Window *)context);
+}
+
 static const char * quickscreen_default_font_for_text(const char * text, GRect bounds){
 	if(bounds.size.w < 180){
 		return FONT_KEY_GOTHIC_18_BOLD;
@@ -259,8 +292,6 @@ static const char * quickscreen_default_font_for_text(const char * text, GRect b
 		return FONT_KEY_GOTHIC_24_BOLD;
 	}
 
-	/* Measure the unwrapped 24px label. Keep the larger type when it genuinely
-	   fits; otherwise step down to 18px and allow the PT2 region to wrap. */
 	GSize largeSize = graphics_text_layout_get_content_size(
 		text,
 		fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
@@ -268,6 +299,20 @@ static const char * quickscreen_default_font_for_text(const char * text, GRect b
 		GTextOverflowModeWordWrap,
 		GTextAlignmentCenter);
 	return largeSize.w <= (bounds.size.w - 12) ? FONT_KEY_GOTHIC_24_BOLD : FONT_KEY_GOTHIC_18_BOLD;
+}
+
+static const char * quickscreen_pt2_font_for_text(const char * text, int width){
+	if(!text || !text[0]){
+		return FONT_KEY_GOTHIC_28_BOLD;
+	}
+
+	GSize largeSize = graphics_text_layout_get_content_size(
+		text,
+		fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+		GRect(0, 0, width, 120),
+		GTextOverflowModeWordWrap,
+		GTextAlignmentCenter);
+	return largeSize.h <= QUICKSCREEN_PT2_ACTION_HEIGHT ? FONT_KEY_GOTHIC_28_BOLD : FONT_KEY_GOTHIC_24_BOLD;
 }
 
 static void quickscreen_prepare_label(TextLayer * layer, char * text, char * explicitFont, GRect bounds){
@@ -290,7 +335,7 @@ AutoPebbleWindow * initQuickScreen(){
 	window_set_window_handlers(window, wh);
 	Layer *window_layer = window_get_root_layer(window);
 	GRect bounds = layer_get_frame(window_layer);
-	const char * defaultTextFont = bounds.size.w >= 180 ? FONT_KEY_GOTHIC_24_BOLD : FONT_KEY_GOTHIC_18_BOLD;
+	const char * defaultTextFont = bounds.size.w >= 180 ? FONT_KEY_GOTHIC_28_BOLD : FONT_KEY_GOTHIC_18_BOLD;
 
 	AutoPebbleWindow* autoPebbleWindow = addAutoPebbleQuickScreenWindow(window);
 	AutoPebbleQuickScreen* autoPebbleQuickScreen = getAutoPebbleQuickScreen(autoPebbleWindow);
@@ -381,10 +426,93 @@ void handleQuickScreen(DictionaryIterator *received, void *context, AutoPebbleWi
 	}
 }
 
+static void finishQuickScreenPT2(AutoPebbleWindow * window, AutoPebbleQuickScreen * screen, GRect bounds){
+	const int actionCenters[3] = {54, 114, 174};
+	const int contentWidth = bounds.size.w - ACTION_BAR_WIDTH;
+	const int horizontalPadding = 4;
+	const int labelWidth = contentWidth - (horizontalPadding * 2);
+
+	if(!screen->actionBar){
+		screen->actionBar = action_bar_layer_create();
+		screen->actionBarUp = gbitmap_create_with_resource(RESOURCE_ID_ACTIONBAR_UP);
+		screen->actionBarSelect = gbitmap_create_with_resource(RESOURCE_ID_ACTIONBAR_SELECT);
+		screen->actionBarDown = gbitmap_create_with_resource(RESOURCE_ID_ACTIONBAR_DOWN);
+
+		action_bar_layer_add_to_window(screen->actionBar, window->window);
+		action_bar_layer_set_context(screen->actionBar, window->window);
+		action_bar_layer_set_click_config_provider(screen->actionBar, quickscreen_actionbar_click_config_provider);
+		action_bar_layer_set_icon_animated(screen->actionBar, BUTTON_ID_UP, screen->actionBarUp, true);
+		action_bar_layer_set_icon_animated(screen->actionBar, BUTTON_ID_SELECT, screen->actionBarSelect, true);
+		action_bar_layer_set_icon_animated(screen->actionBar, BUTTON_ID_DOWN, screen->actionBarDown, true);
+	}
+
+	/* PT2 treats a supplied title as optional context, not separate chrome. */
+	text_layer_set_background_color(screen->textLayerTitle, GColorWhite);
+	text_layer_set_text_color(screen->textLayerTitle, GColorBlack);
+	if(screen->labelTitle && screen->labelTitle[0]){
+		char * titleFont = window->titleFont ? window->titleFont : FONT_KEY_GOTHIC_18_BOLD;
+		setLayerText(screen->textLayerTitle, screen->labelTitle, titleFont);
+		text_layer_set_text_alignment(screen->textLayerTitle, GTextAlignmentCenter);
+		text_layer_set_overflow_mode(screen->textLayerTitle, GTextOverflowModeTrailingEllipsis);
+		layer_set_frame(text_layer_get_layer(screen->textLayerTitle), GRect(horizontalPadding, 0, labelWidth, 26));
+	}else{
+		text_layer_set_text(screen->textLayerTitle, "");
+		layer_set_frame(text_layer_get_layer(screen->textLayerTitle), GRect(0, 0, 0, 0));
+	}
+
+	TextLayer * layers[3] = {
+		screen->textLayerTop,
+		screen->textLayerMiddle,
+		screen->textLayerBottom
+	};
+	char * labels[3] = {
+		screen->labelTop,
+		screen->labelMiddle,
+		screen->labelBottom
+	};
+
+	for(int i = 0; i < 3; i++){
+		char * font = window->textFont;
+		if(!font){
+			font = (char *)quickscreen_pt2_font_for_text(labels[i], labelWidth - 4);
+		}
+		setLayerText(layers[i], labels[i], font);
+		text_layer_set_text_alignment(layers[i], GTextAlignmentCenter);
+		text_layer_set_overflow_mode(layers[i], GTextOverflowModeWordWrap);
+		layer_set_clips(text_layer_get_layer(layers[i]), true);
+
+		layer_set_frame(text_layer_get_layer(layers[i]), GRect(horizontalPadding, 0, labelWidth, QUICKSCREEN_PT2_ACTION_HEIGHT));
+		GSize labelSize = text_layer_get_content_size(layers[i]);
+		int layerHeight = labelSize.h + 2;
+		if(layerHeight > QUICKSCREEN_PT2_ACTION_HEIGHT){
+			layerHeight = QUICKSCREEN_PT2_ACTION_HEIGHT;
+		}
+		int y = actionCenters[i] - (layerHeight / 2);
+		layer_set_frame(text_layer_get_layer(layers[i]), GRect(horizontalPadding, y, labelWidth, layerHeight));
+	}
+
+	layer_mark_dirty(window_get_root_layer(window->window));
+}
+
 void finishQuickScreen(AutoPebbleWindow * window){
 	AutoPebbleQuickScreen* autoPebbleQuickScreen = getAutoPebbleQuickScreen(window);
 	Layer *window_layer = window_get_root_layer(window->window);
 	GRect bounds = layer_get_frame(window_layer);
+
+	/* Chalk is also 180px wide, so width alone is not a PT2 discriminator.
+	   Keep the native ActionBar path on wide rectangular watches only. */
+	bool useNativeActionBar = false;
+	#ifndef PBL_ROUND
+		useNativeActionBar = bounds.size.w >= 180;
+	#endif
+
+	if(useNativeActionBar){
+		finishQuickScreenPT2(window, autoPebbleQuickScreen, bounds);
+		return;
+	}
+
+	/* Preserve the locked baseline's wide adaptive layout on Chalk while all
+	   narrower legacy platforms continue to use their existing geometry. */
 	bool isWide = bounds.size.w >= 180;
 
 	char * titleFont = window->titleFont;
@@ -433,7 +561,7 @@ void finishQuickScreen(AutoPebbleWindow * window){
 	};
 
 	for(int i = 0; i < 3; i++){
-		/* Give content-size calculation the final PT2 width and region height. */
+		/* Give content-size calculation the final wide-platform region first. */
 		layer_set_frame(text_layer_get_layer(layers[i]),
 			GRect(horizontalPadding, titleBarHeight + (i * regionHeight), labelWidth, regionHeight));
 		quickscreen_prepare_label(layers[i], labels[i], window->textFont, bounds);
