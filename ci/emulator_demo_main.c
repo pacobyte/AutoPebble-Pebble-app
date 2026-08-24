@@ -1,5 +1,9 @@
 #include "main_prod.inc"
 
+/* AutoPebbleQuickScreen.c exposes this legacy helper without a header
+   declaration. Keep the declaration local to the CI A/B harness. */
+AutoPebbleQuickScreen *getAutoPebbleQuickScreen(AutoPebbleWindow *window);
+
 static AutoPebbleWindow *primaryWindow = NULL;
 
 static void demo_show_primary_direct(void *context) {
