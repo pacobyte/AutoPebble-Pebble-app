@@ -43,9 +43,11 @@ int main(void) {
      independent of Bluetooth/phone state and production init(). */
   app_message_open(256, 256);
 
-  /* Leave enough time for CI to attach Pebble logs before the readiness marker. */
-  app_timer_register(1500, demo_show_primary_quick, NULL);
-  app_timer_register(10000, demo_show_secondary_quick, NULL);
+  /* pebble install launches the app before CI attaches `pebble logs`. Keep the
+     first screen comfortably after logger attachment, then leave a generous
+     interaction window before stacking the secondary screen. */
+  app_timer_register(7000, demo_show_primary_quick, NULL);
+  app_timer_register(22000, demo_show_secondary_quick, NULL);
 
   app_event_loop();
   window_destroy(keeper);
