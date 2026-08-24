@@ -22,6 +22,11 @@ For more details see:
   * https://apps.rebble.io/en_US/application/52d1e5957c0c7321a8000008?query=autopebble&section=watchapps
   * https://joaoapps.com/autopebble/
 
+## Pebble Time 2 / Emery port
+
+Active PT2 work is on the `pebble-time-2` branch. The port adds native `emery` / 200×228 support while preserving the existing AutoPebble UUID, AppMessage protocol, Android companion behavior, and Tasker-facing semantics.
+
+See **[docs/pebble-time-2-port.md](docs/pebble-time-2-port.md)** for current status, design decisions, emulator/CI testing, curated screenshots, the isolated ActionBar experiment, and remaining hardware/release work.
 
 ## Resources
 
