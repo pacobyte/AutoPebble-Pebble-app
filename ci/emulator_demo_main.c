@@ -15,8 +15,13 @@ static void demo_show_primary_quick(void *context) {
   screen->actionMiddle = resetString(screen->actionMiddle, "CI_SINGLE_SELECT");
   screen->actionBottom = resetString(screen->actionBottom, "CI_SINGLE_DOWN");
 
-  /* Exercise the real PT2 production renderer and native ActionBar path. */
+  /* Exercise the real production renderer on the active emulator platform. */
   finishQuickScreen(window);
+  if (screen->actionBar) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "CI_NATIVE_ACTIONBAR_ACTIVE");
+  } else {
+    APP_LOG(APP_LOG_LEVEL_INFO, "CI_NATIVE_ACTIONBAR_INACTIVE");
+  }
   APP_LOG(APP_LOG_LEVEL_INFO, "CI_PRIMARY_READY");
 }
 

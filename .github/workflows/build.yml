@@ -103,6 +103,13 @@ jobs:
 
           echo '--- wait for real primary PT2 Quick Screen ---'
           if ! wait_for_marker 'CI_PRIMARY_READY' 55; then failures=$((failures + 1)); fi
+          if ! wait_for_marker 'CI_NATIVE_ACTIONBAR_ACTIVE'; then failures=$((failures + 1)); fi
+          if grep -q 'CI_NATIVE_ACTIONBAR_INACTIVE' emery-interaction.log; then
+            echo 'FAIL: Emery reported native ActionBar inactive'
+            failures=$((failures + 1))
+          else
+            echo 'PASS: Emery did not report native ActionBar inactive'
+          fi
           pebble screenshot --emulator emery --no-open emery-actionbar-title.png
 
           echo '--- single Up through ActionBar provider ---'
@@ -158,6 +165,65 @@ jobs:
 
           echo 'All reproducible native ActionBar diagnostics passed.'
 
+      - name: Launch demo in Chalk emulator
+        run: |
+          pebble kill || true
+          sleep 1
+          pebble install --emulator chalk
+          sleep 2
+          pebble logs --emulator chalk > chalk-interaction.log 2>&1 &
+          echo $! > /tmp/chalk-logs.pid
+          sleep 1
+
+      - name: Verify Chalk stays on round Quick Screen path
+        run: |
+          set +e
+          failures=0
+
+          wait_for_chalk_marker() {
+            marker="$1"
+            attempts="${2:-25}"
+            n=0
+            while [ "$n" -lt "$attempts" ]; do
+              if grep -q "$marker" chalk-interaction.log; then
+                echo "PASS: $marker"
+                return 0
+              fi
+              sleep 0.2
+              n=$((n + 1))
+            done
+            echo "FAIL: missing $marker"
+            return 1
+          }
+
+          echo '--- wait for Chalk primary Quick Screen ---'
+          if ! wait_for_chalk_marker 'CI_PRIMARY_READY' 55; then failures=$((failures + 1)); fi
+          if ! wait_for_chalk_marker 'CI_NATIVE_ACTIONBAR_INACTIVE'; then failures=$((failures + 1)); fi
+          if grep -q 'CI_NATIVE_ACTIONBAR_ACTIVE' chalk-interaction.log; then
+            echo 'FAIL: Chalk entered native ActionBar path'
+            failures=$((failures + 1))
+          else
+            echo 'PASS: Chalk stayed off native ActionBar path'
+          fi
+
+          pebble screenshot --emulator chalk --no-open chalk-quick-baseline.png
+
+          if [ -f /tmp/chalk-logs.pid ]; then
+            kill "$(cat /tmp/chalk-logs.pid)" 2>/dev/null
+          fi
+          sleep 0.5
+
+          echo '===== Chalk interaction log ====='
+          cat chalk-interaction.log
+          echo '===== End Chalk interaction log ====='
+
+          if [ "$failures" -ne 0 ]; then
+            echo "Chalk Quick Screen regression diagnostics failed: $failures assertion(s)"
+            exit 1
+          fi
+
+          echo 'Chalk remained on the non-ActionBar round Quick Screen path.'
+
       - name: Upload production PBW artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -176,3 +242,12 @@ jobs:
             emery-actionbar-secondary.png
             emery-actionbar-restored.png
             emery-interaction.log
+
+      - name: Upload Chalk Quick Screen regression artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chalk-quick-regression
+          path: |
+            chalk-quick-baseline.png
+            chalk-interaction.log
