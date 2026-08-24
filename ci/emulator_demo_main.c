@@ -9,6 +9,8 @@ static void apply_actionbar_prototype(AutoPebbleWindow *window, AutoPebbleQuickS
   Layer *root = window_get_root_layer(window->window);
   GRect bounds = layer_get_bounds(root);
   int textWidth = bounds.size.w - ACTION_BAR_WIDTH;
+  GRect textBounds = bounds;
+  textBounds.size.w = textWidth;
 
   prototypeActionBar = action_bar_layer_create();
   prototypeUp = gbitmap_create_with_resource(RESOURCE_ID_ACTIONBAR_UP);
@@ -20,21 +22,57 @@ static void apply_actionbar_prototype(AutoPebbleWindow *window, AutoPebbleQuickS
   action_bar_layer_set_icon(prototypeActionBar, BUTTON_ID_DOWN, prototypeDown);
   action_bar_layer_add_to_window(prototypeActionBar, window->window);
 
-  TextLayer *layers[4] = {
-    screen->textLayerTitle,
+  int titleBarHeight = 0;
+  if (screen->textLayerTitle && screen->labelTitle && screen->labelTitle[0]) {
+    const char *titleFont = window->titleFont;
+    if (!titleFont) {
+      titleFont = quickscreen_default_font_for_text(screen->labelTitle, textBounds);
+    }
+    setLayerText(screen->textLayerTitle, screen->labelTitle, (char *)titleFont);
+    text_layer_set_text_alignment(screen->textLayerTitle, GTextAlignmentCenter);
+    text_layer_set_overflow_mode(screen->textLayerTitle, GTextOverflowModeWordWrap);
+    layer_set_frame(text_layer_get_layer(screen->textLayerTitle), GRect(0, 0, textWidth, 48));
+    GSize titleSize = text_layer_get_content_size(screen->textLayerTitle);
+    titleBarHeight = titleSize.h + 4;
+    if (titleBarHeight > 48) {
+      titleBarHeight = 48;
+    }
+    layer_set_frame(text_layer_get_layer(screen->textLayerTitle), GRect(0, 0, textWidth, titleBarHeight));
+  }
+
+  int statusBarHeight = window->isFullScreen ? 0 : 16;
+  int availableHeight = bounds.size.h - titleBarHeight - statusBarHeight;
+  int regionHeight = availableHeight / 3;
+  int horizontalPadding = 4;
+  int labelWidth = textWidth - (horizontalPadding * 2);
+
+  TextLayer *layers[3] = {
     screen->textLayerTop,
     screen->textLayerMiddle,
     screen->textLayerBottom
   };
+  char *labels[3] = {
+    screen->labelTop,
+    screen->labelMiddle,
+    screen->labelBottom
+  };
 
-  for (int i = 0; i < 4; i++) {
-    if (!layers[i]) {
-      continue;
+  GRect labelBounds = textBounds;
+  labelBounds.size.w = labelWidth;
+  for (int i = 0; i < 3; i++) {
+    int regionTop = titleBarHeight + (i * regionHeight);
+    layer_set_frame(text_layer_get_layer(layers[i]),
+                    GRect(horizontalPadding, regionTop, labelWidth, regionHeight));
+    quickscreen_prepare_label(layers[i], labels[i], window->textFont, labelBounds);
+
+    GSize labelSize = text_layer_get_content_size(layers[i]);
+    int layerHeight = labelSize.h + 4;
+    if (layerHeight > regionHeight) {
+      layerHeight = regionHeight;
     }
-    Layer *layer = text_layer_get_layer(layers[i]);
-    GRect frame = layer_get_frame(layer);
-    frame.size.w = textWidth;
-    layer_set_frame(layer, frame);
+    int y = regionTop + ((regionHeight - layerHeight) / 2);
+    layer_set_frame(text_layer_get_layer(layers[i]),
+                    GRect(horizontalPadding, y, labelWidth, layerHeight));
   }
 
   layer_mark_dirty(root);
@@ -44,7 +82,7 @@ static void demo_show_quick_long(void *context) {
   AutoPebbleWindow *window = initQuickScreen();
   AutoPebbleQuickScreen *screen = getCurrentAutoPebbleQuickScreen();
 
-  screen->labelTitle = resetString(screen->labelTitle, "ActionBar Prototype");
+  screen->labelTitle = resetString(screen->labelTitle, "Quick Screen Long Title Test");
   screen->labelTop = resetString(screen->labelTop, "Bedroom & Hallway Lights");
   screen->labelMiddle = resetString(screen->labelMiddle, "Open the Garage Door");
   screen->labelBottom = resetString(screen->labelBottom, "Upstairs Climate Control");
