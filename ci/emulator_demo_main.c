@@ -1,5 +1,9 @@
 #include "main_prod.inc"
 
+/* AutoPebbleQuickScreen.c defines this provider but the legacy code does not
+   expose it in a header. Keep the declaration local to the CI prototype. */
+void config_quickscreen_click_provider(Window *window);
+
 static ActionBarLayer *prototypeActionBar = NULL;
 static GBitmap *prototypeUp = NULL;
 static GBitmap *prototypeSelect = NULL;
