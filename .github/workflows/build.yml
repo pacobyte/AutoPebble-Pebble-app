@@ -147,6 +147,13 @@ jobs:
             if ! wait_for_marker 'CI_SINGLE_SELECT'; then failures=$((failures + 1)); fi
           fi
 
+          echo '--- wait for physical-watch Media Volume regression screen ---'
+          if ! wait_for_marker 'CI_MEDIA_VOLUME_READY' 60; then
+            failures=$((failures + 1))
+          else
+            pebble screenshot --emulator emery --no-open emery-media-volume.png
+          fi
+
           echo "NOTE: multi-click is intentionally deferred to the physical PT2 test because identical xdotool double-click injection failed through AutoPebble's inherited direct Window provider and the ActionBar provider."
 
           if [ -f /tmp/pebble-logs.pid ]; then
@@ -241,6 +248,7 @@ jobs:
             emery-actionbar-up-pressed.png
             emery-actionbar-secondary.png
             emery-actionbar-restored.png
+            emery-media-volume.png
             emery-interaction.log
 
       - name: Upload Chalk Quick Screen regression artifacts
