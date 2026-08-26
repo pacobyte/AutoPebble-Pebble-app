@@ -18,7 +18,7 @@
 #define QUICKSCREEN_LONG_ACTION_PREFIX  13
 #define QUICKSCREEN_MULTI_ACTION_PREFIX  14
 
-#define QUICKSCREEN_PT2_ACTION_HEIGHT 58
+#define QUICKSCREEN_PT2_ACTION_HEIGHT 58\n#define QUICKSCREEN_PT2_LARGE_FONT_SAFE_HEIGHT 52\n#define QUICKSCREEN_PT2_TEXT_HEADROOM 8\n#define QUICKSCREEN_PT2_TITLE_HEIGHT 30
 
 AutoPebbleQuickScreen * newPebbleQuickScreen(){
 	struct AutoPebbleQuickScreen * item = (AutoPebbleQuickScreen*) malloc(sizeof(AutoPebbleQuickScreen));
@@ -312,7 +312,7 @@ static const char * quickscreen_pt2_font_for_text(const char * text, int width){
 		GRect(0, 0, width, 120),
 		GTextOverflowModeWordWrap,
 		GTextAlignmentCenter);
-	return largeSize.h <= QUICKSCREEN_PT2_ACTION_HEIGHT ? FONT_KEY_GOTHIC_28_BOLD : FONT_KEY_GOTHIC_24_BOLD;
+	return largeSize.h <= QUICKSCREEN_PT2_LARGE_FONT_SAFE_HEIGHT ? FONT_KEY_GOTHIC_28_BOLD : FONT_KEY_GOTHIC_24_BOLD;
 }
 
 static void quickscreen_prepare_label(TextLayer * layer, char * text, char * explicitFont, GRect bounds){
@@ -454,7 +454,7 @@ static void finishQuickScreenPT2(AutoPebbleWindow * window, AutoPebbleQuickScree
 		setLayerText(screen->textLayerTitle, screen->labelTitle, titleFont);
 		text_layer_set_text_alignment(screen->textLayerTitle, GTextAlignmentCenter);
 		text_layer_set_overflow_mode(screen->textLayerTitle, GTextOverflowModeTrailingEllipsis);
-		layer_set_frame(text_layer_get_layer(screen->textLayerTitle), GRect(horizontalPadding, 0, labelWidth, 26));
+		/* Physical PT2 font rasterization needs slightly more vertical room than\n\t\t   the emulator reports, especially along the baseline/descenders. */\n\t\tlayer_set_frame(text_layer_get_layer(screen->textLayerTitle), GRect(horizontalPadding, 0, labelWidth, QUICKSCREEN_PT2_TITLE_HEIGHT));
 	}else{
 		text_layer_set_text(screen->textLayerTitle, "");
 		layer_set_frame(text_layer_get_layer(screen->textLayerTitle), GRect(0, 0, 0, 0));
@@ -483,7 +483,7 @@ static void finishQuickScreenPT2(AutoPebbleWindow * window, AutoPebbleQuickScree
 
 		layer_set_frame(text_layer_get_layer(layers[i]), GRect(horizontalPadding, 0, labelWidth, QUICKSCREEN_PT2_ACTION_HEIGHT));
 		GSize labelSize = text_layer_get_content_size(layers[i]);
-		int layerHeight = labelSize.h + 2;
+		/* Do not size tightly to the emulator-reported glyph bounds. Real Emery\n\t\t   hardware can rasterize a few pixels lower, which clipped descenders. */\n\t\tint layerHeight = labelSize.h + QUICKSCREEN_PT2_TEXT_HEADROOM;
 		if(layerHeight > QUICKSCREEN_PT2_ACTION_HEIGHT){
 			layerHeight = QUICKSCREEN_PT2_ACTION_HEIGHT;
 		}
