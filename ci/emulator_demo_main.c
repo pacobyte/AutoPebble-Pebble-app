@@ -39,6 +39,22 @@ static void demo_show_secondary_quick(void *context) {
   APP_LOG(APP_LOG_LEVEL_INFO, "CI_SECONDARY_READY");
 }
 
+
+static void demo_show_media_volume_quick(void *context) {
+  AutoPebbleWindow *window = initQuickScreen();
+  AutoPebbleQuickScreen *screen = getCurrentAutoPebbleQuickScreen();
+
+  /* Reproduce the first physical-PT2 clipping report closely enough to catch
+     baseline/descender regressions in the emulator artifact set. */
+  screen->labelTitle = resetString(screen->labelTitle, "Media Volume");
+  screen->labelTop = resetString(screen->labelTop, "+5%");
+  screen->labelMiddle = resetString(screen->labelMiddle, "Nothing Playing · --%");
+  screen->labelBottom = resetString(screen->labelBottom, "-5%");
+
+  finishQuickScreen(window);
+  APP_LOG(APP_LOG_LEVEL_INFO, "CI_MEDIA_VOLUME_READY");
+}
+
 int main(void) {
   Window *keeper = window_create();
   window_stack_push(keeper, false);
@@ -52,7 +68,7 @@ int main(void) {
      first screen comfortably after logger attachment, then leave a generous
      interaction window before stacking the secondary screen. */
   app_timer_register(7000, demo_show_primary_quick, NULL);
-  app_timer_register(22000, demo_show_secondary_quick, NULL);
+  app_timer_register(22000, demo_show_secondary_quick, NULL);\n  app_timer_register(32000, demo_show_media_volume_quick, NULL);
 
   app_event_loop();
   window_destroy(keeper);
