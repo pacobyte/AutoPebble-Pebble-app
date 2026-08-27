@@ -124,6 +124,10 @@ A separate Chalk emulator regression verifies that the production Quick renderer
 
 GitHub Actions run #72 (`32742112334`) on production commit `9f5bd3b6d63d3dc6d2643513582cda7050bc1ac8` passed the production build, Emery ActionBar hardening diagnostics, and Chalk isolation regression.
 
+After the first physical PT2 install exposed vertical glyph clipping in the Quick Screen title and action labels, hardware-fix branch `pt2-hardware-fixes` added deliberate vertical render headroom instead of sizing layers tightly to emulator-reported glyph bounds. The exact observed `Media Volume / +5% / Nothing Playing · --% / -5%` case is now reproduced in CI. The same hardware-aware title headroom was applied to the PT2 Text Screen after source review showed similarly tight Gothic 18 Bold title geometry.
+
+GitHub Actions run #80 (`33033381156`) on commit `1d3d13fcee71f5e1d4d207384ffd47fa7b7a9648` passed the production build, existing Emery ActionBar gates, Chalk isolation regression, and new Emery screenshots for Quick, Text, and List. These emulator images are clean, but because the original clipping was hardware-only they reduce risk rather than proving the physical fix.
+
 Synthetic xdotool double-click injection was investigated separately. The same double-click failure occurred with AutoPebble's inherited direct Window click provider and with the ActionBar provider, while single and long clicks passed. The ActionBar was therefore not the cause. Existing multi-click subscriptions remain unchanged; **multi-click is a mandatory physical PT2 test item** rather than an emulator gate.
 
 A phone-less emulator initially made long tests nondeterministic because production AutoPebble responds to Bluetooth disconnects by closing its windows. The CI-only demo therefore avoids production phone/Bluetooth startup and uses a harmless keeper window to keep the app active. Production Bluetooth behavior was not changed.
@@ -152,35 +156,40 @@ Only durable reference images are kept in `docs/screenshots/`.
 
 ## Current project status
 
-The emulator-side PT2 port is structurally complete and hardened:
+The emulator-side PT2 port is structurally complete and hardened, and the first limited physical PT2 smoke test has been performed.
 
-- native Emery build: complete
-- List / Quick / Text adaptation: complete
-- Text/List emulator hardening: complete
-- native PT2 Quick Screen ActionBar design: adopted and promoted to production branch
-- Emery ActionBar interaction/lifecycle emulator gate: passed
-- Chalk non-ActionBar regression gate: passed
-- compatibility contract preserved in source: complete
+Completed physical checks:
 
-The remaining uncertainty is deliberately concentrated in the late-stage physical integration test: actual Android AutoPebble companion communication, watch↔Tasker actions, real hardware button behavior (especially multi-click), and any hardware-only rendering/interaction differences.
+- candidate PBW installed successfully over the existing app with the preserved UUID
+- app launched successfully
+- an existing Tasker → AutoPebble action reached the watch successfully
+- native Quick Screen ActionBar appeared on the real PT2
+
+That first hardware test also found a real rendering issue that the emulator had not shown: the Quick Screen title and middle action label were vertically clipped. The current `pt2-hardware-fixes` branch adds PT2 render headroom for Quick Screen labels/title and Text Screen title geometry. Run #80 validates the changed production build plus Quick/Text/List emulator references without regressions.
+
+A known-good rollback PBW has been identified and preserved: the community-modded **Classic Pebble menu color** AutoPebble v1.11 build with SHA-256 `4b102bd3d0924b8c045888f9141a65bd16faddf9377d921f2931377fb180e0cd`.
+
+The next physical test must be a **batched hardware validation**, not a one-change iteration. Physical testing is intentionally treated as expensive because it requires manual watch photography and phone/watch interaction.
 
 ## Remaining work
 
-1. Secure a known-good rollback PBW for the currently working physical watch installation before replacing anything.
-2. Select/build the candidate PT2 PBW from the hardened `pebble-time-2` branch.
-3. Perform one broad physical Pebble Time 2 test:
-   - install and launch
-   - Android AutoPebble companion communication
-   - representative Tasker → watch command
-   - watch → Tasker action
-   - List / Quick / Text behavior
-   - ActionBar single/long button behavior and native feedback
-   - **Quick Screen multi-click actions**
-   - confirm existing Sleep as Android behavior remains unaffected and AutoPebble feedback does not cover the Sleep app when sleep tracking starts
-4. Fix only hardware-specific issues discovered by that test, then repeat only the affected checks unless a broad regression is warranted.
+1. Preserve the run #80 PBW as the next physical hardware candidate. It keeps UUID `1b2d45a5-c00a-4f89-b567-4cf4d2d78b2f`, version 1.11.0, and Aplite/Basalt/Chalk/Emery targets.
+2. Perform one consolidated physical Pebble Time 2 session covering:
+   - verify the previous Quick Screen clipping is gone on the real display
+   - representative titled and no-title Quick Screens, including a longer label
+   - native ActionBar visual feedback
+   - single-click and long-click actions
+   - **multi-click**, which remains mandatory because emulator injection is unreliable
+   - representative List navigation/selection
+   - Text Screen visual/scroll sanity if a low-friction real Tasker path is available; do not create a burdensome one-off test solely for this
+   - Tasker → watch and watch → Tasker communication
+   - confirm existing Sleep as Android handoff remains unaffected and AutoPebble does not cover the Sleep app after tracking starts
+   - where practical, piggyback already-pending real AutoPebble Control Hub checks such as AV Receiver Volume and Pause / Resume rather than creating another device-test session
+3. Fix only hardware-specific issues discovered by that batch, then repeat only checks plausibly affected by those fixes.
+4. Promote the tested hardware fixes from `pt2-hardware-fixes` to `pebble-time-2` only after that physical validation.
 5. Decide later whether this work should remain private, be shared informally, or become a public release. If public distribution is chosen, resolve source/icon licensing and package/release documentation before publishing.
 
-Physical-watch testing has intentionally been deferred until late in the process to avoid disrupting a currently functional AutoPebble installation and to minimize repeated manual testing.
+Physical-watch testing should remain sparse and batched. Do not request repeated install/photo cycles for cosmetic or emulator-provable changes.
 
 ## Documentation policy
 
