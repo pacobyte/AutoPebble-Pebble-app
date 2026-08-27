@@ -68,7 +68,8 @@ int main(void) {
      first screen comfortably after logger attachment, then leave a generous
      interaction window before stacking the secondary screen. */
   app_timer_register(7000, demo_show_primary_quick, NULL);
-  app_timer_register(22000, demo_show_secondary_quick, NULL);\n  app_timer_register(32000, demo_show_media_volume_quick, NULL);
+  app_timer_register(22000, demo_show_secondary_quick, NULL);
+  app_timer_register(32000, demo_show_media_volume_quick, NULL);
 
   app_event_loop();
   window_destroy(keeper);
