@@ -154,6 +154,20 @@ jobs:
             pebble screenshot --emulator emery --no-open emery-media-volume.png
           fi
 
+          echo '--- wait for PT2 Text Screen regression screen ---'
+          if ! wait_for_marker 'CI_TEXT_SCREEN_READY' 60; then
+            failures=$((failures + 1))
+          else
+            pebble screenshot --emulator emery --no-open emery-text-screen.png
+          fi
+
+          echo '--- wait for PT2 List Screen regression screen ---'
+          if ! wait_for_marker 'CI_LIST_SCREEN_READY' 60; then
+            failures=$((failures + 1))
+          else
+            pebble screenshot --emulator emery --no-open emery-list-screen.png
+          fi
+
           echo "NOTE: multi-click is intentionally deferred to the physical PT2 test because identical xdotool double-click injection failed through AutoPebble's inherited direct Window provider and the ActionBar provider."
 
           if [ -f /tmp/pebble-logs.pid ]; then
@@ -249,6 +263,8 @@ jobs:
             emery-actionbar-secondary.png
             emery-actionbar-restored.png
             emery-media-volume.png
+            emery-text-screen.png
+            emery-list-screen.png
             emery-interaction.log
 
       - name: Upload Chalk Quick Screen regression artifacts
