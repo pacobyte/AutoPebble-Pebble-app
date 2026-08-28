@@ -111,6 +111,14 @@ static int text_screen_horizontal_padding(GRect bounds){
 	return bounds.size.w >= 180 ? 4 : 0;
 }
 
+static bool text_screen_is_wide_rect(GRect bounds){
+	#ifdef PBL_ROUND
+		return false;
+	#else
+		return bounds.size.w >= 180;
+	#endif
+}
+
 static int configure_title_layer(TextLayer * titleLayer, const char * title, const char * titleFont, GRect bounds){
 	if(!title || !title[0]){
 		return 0;
@@ -122,10 +130,13 @@ static int configure_title_layer(TextLayer * titleLayer, const char * title, con
 	text_layer_set_font(titleLayer, fonts_get_system_font(titleFont));
 
 	GSize titleSize = text_layer_get_content_size(titleLayer);
-	int titleHeight = titleSize.h + 3;
+	/* Match the hardware headroom policy used by the PT2 Quick Screen.
+	   Physical Emery can rasterize Gothic 18 Bold a few pixels lower than
+	   the emulator-reported content bounds. */
+	int titleHeight = titleSize.h + (text_screen_is_wide_rect(bounds) ? 8 : 3);
 
 	/* Keep pathological titles from consuming most of the PT2 display. */
-	if(bounds.size.w >= 180 && titleHeight > 48){
+	if(text_screen_is_wide_rect(bounds) && titleHeight > 48){
 		titleHeight = 48;
 	}
 
@@ -174,13 +185,14 @@ AutoPebbleWindow * initTextScreen(){
 	GRect bounds = layer_get_bounds(window_layer);
 
 	/* The title is fixed. Only the body belongs to the ScrollLayer. */
-	autoPebbleTextScreen->textLayerTitle = text_layer_create(GRect(0, 0, bounds.size.w, initial_title_height));
+	int initialTitleHeight = text_screen_is_wide_rect(bounds) ? 30 : initial_title_height;
+	autoPebbleTextScreen->textLayerTitle = text_layer_create(GRect(0, 0, bounds.size.w, initialTitleHeight));
 	text_layer_set_text_alignment(autoPebbleTextScreen->textLayerTitle, GTextAlignmentCenter);
 	text_layer_set_font(autoPebbleTextScreen->textLayerTitle, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text(autoPebbleTextScreen->textLayerTitle, "AutoPebble");
 	layer_add_child(window_layer, text_layer_get_layer(autoPebbleTextScreen->textLayerTitle));
 
-	GRect scrollBounds = GRect(0, initial_title_height, bounds.size.w, bounds.size.h - initial_title_height);
+	GRect scrollBounds = GRect(0, initialTitleHeight, bounds.size.w, bounds.size.h - initialTitleHeight);
 	autoPebbleTextScreen->scroll_layer = scroll_layer_create(scrollBounds);
 
 	ScrollLayerCallbacks scrollCallbacks = {.click_config_provider = &config_textscreen_click_provider};
