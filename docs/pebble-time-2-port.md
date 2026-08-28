@@ -186,15 +186,20 @@ This confirms on real PT2 hardware:
 
 The physical multi-click result closes the emulator-only uncertainty around double-click injection.
 
+The validated hardware-fix branch was promoted through PR #3 into `pebble-time-2` at merge commit `08b3df57b3a13c309008d2f5ac8a4933968ec64c`.
+
+Post-promotion production CI run #83 (`33205542980`) passed every build and emulator gate on that exact merge commit, including production PBW build, Emery ActionBar diagnostics, PT2 Quick/Text/List regression screenshots, and Chalk non-ActionBar isolation. The canonical production PBW from run #83 has SHA-256 `263bc45b5fb0188b342f590831b52c00d6590d0e25f6715de362e1f4871141e8`.
+
+The run #83 PBW is functionally the same source build as the physically tested run #80 candidate. Its platform binaries differ from run #80 only in the embedded build timestamp field; all application/resource sizes and resources are unchanged. No additional physical retest is required for that rebuild.
+
 ## Remaining work
 
-1. Promote the now physically validated `pt2-hardware-fixes` branch to `pebble-time-2`.
-2. Run the normal post-promotion CI/build gate and preserve the resulting production PBW.
-3. Keep Sleep as Android behavior unchanged. Its successful handoff/no-overlay behavior was already established outside this dedicated renderer/button test, and the hardware-fix changes touch only Quick/Text geometry plus CI.
-4. Continue the separate AutoPebble Control Hub functional backlog independently; AV Receiver Volume and Pause / Resume are application-level checks rather than blockers for the PT2 watch-app port.
-5. Decide later whether this work should remain private, be shared informally, or become a public release. If public distribution is chosen, resolve source/icon licensing and package/release documentation before publishing.
+1. Keep Sleep as Android behavior unchanged. Its successful handoff/no-overlay behavior was already established outside this dedicated renderer/button test, and the hardware-fix changes touch only Quick/Text geometry plus CI.
+2. Continue the separate AutoPebble Control Hub functional backlog independently; AV Receiver Volume and Pause / Resume are application-level checks rather than blockers for the PT2 watch-app port.
+3. Decide later whether this work should remain private, be shared informally, or become a public release. If public distribution is chosen, resolve source/icon licensing and package/release documentation before publishing.
+4. When the public/private release decision is made, decide whether PR #1 should be finalized/merged into the inherited default branch or whether `pebble-time-2` should remain the maintained production branch.
 
-No further PT2 physical retest is required unless the promotion/build process changes production code or a later hardware-specific issue appears.
+The PT2 watch-app port itself is now hardware-validated and production-CI-validated. No further PT2 physical retest is required unless later production code changes or a new hardware-specific issue appears.
 
 ## Documentation policy
 
