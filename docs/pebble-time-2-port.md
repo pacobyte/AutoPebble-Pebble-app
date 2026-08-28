@@ -169,27 +169,32 @@ That first hardware test also found a real rendering issue that the emulator had
 
 A known-good rollback PBW has been identified and preserved: the community-modded **Classic Pebble menu color** AutoPebble v1.11 build with SHA-256 `4b102bd3d0924b8c045888f9141a65bd16faddf9377d921f2931377fb180e0cd`.
 
-The next physical test must be a **batched hardware validation**, not a one-change iteration. Physical testing is intentionally treated as expensive because it requires manual watch photography and phone/watch interaction.
+The consolidated physical PT2 hardware validation passed on run #80. The dedicated Tasker test project reported:
+
+`PT2 run80 | list=1 visual=GOOD | quick US=1 UL=0 UM=0 MS=0 ML=1 MM=0 DS=0 DL=0 DM=1 | text=GOOD`
+
+This confirms on real PT2 hardware:
+
+- List navigation/selection succeeded and visual rendering was good
+- the previously clipped Quick Screen geometry rendered correctly
+- Up single-click fired exactly once
+- Select long-click fired exactly once
+- Down multi-click/double-click fired exactly once
+- no unintended single/long/multi Quick actions fired
+- Text Screen rendering/scroll sanity was good
+- watch → Tasker command routing worked during the guided test
+
+The physical multi-click result closes the emulator-only uncertainty around double-click injection.
 
 ## Remaining work
 
-1. Preserve the run #80 PBW as the next physical hardware candidate. It keeps UUID `1b2d45a5-c00a-4f89-b567-4cf4d2d78b2f`, version 1.11.0, and Aplite/Basalt/Chalk/Emery targets.
-2. Perform one consolidated physical Pebble Time 2 session covering:
-   - verify the previous Quick Screen clipping is gone on the real display
-   - representative titled and no-title Quick Screens, including a longer label
-   - native ActionBar visual feedback
-   - single-click and long-click actions
-   - **multi-click**, which remains mandatory because emulator injection is unreliable
-   - representative List navigation/selection
-   - Text Screen visual/scroll sanity if a low-friction real Tasker path is available; do not create a burdensome one-off test solely for this
-   - Tasker → watch and watch → Tasker communication
-   - confirm existing Sleep as Android handoff remains unaffected and AutoPebble does not cover the Sleep app after tracking starts
-   - where practical, piggyback already-pending real AutoPebble Control Hub checks such as AV Receiver Volume and Pause / Resume rather than creating another device-test session
-3. Fix only hardware-specific issues discovered by that batch, then repeat only checks plausibly affected by those fixes.
-4. Promote the tested hardware fixes from `pt2-hardware-fixes` to `pebble-time-2` only after that physical validation.
+1. Promote the now physically validated `pt2-hardware-fixes` branch to `pebble-time-2`.
+2. Run the normal post-promotion CI/build gate and preserve the resulting production PBW.
+3. Keep Sleep as Android behavior unchanged. Its successful handoff/no-overlay behavior was already established outside this dedicated renderer/button test, and the hardware-fix changes touch only Quick/Text geometry plus CI.
+4. Continue the separate AutoPebble Control Hub functional backlog independently; AV Receiver Volume and Pause / Resume are application-level checks rather than blockers for the PT2 watch-app port.
 5. Decide later whether this work should remain private, be shared informally, or become a public release. If public distribution is chosen, resolve source/icon licensing and package/release documentation before publishing.
 
-Physical-watch testing should remain sparse and batched. Do not request repeated install/photo cycles for cosmetic or emulator-provable changes.
+No further PT2 physical retest is required unless the promotion/build process changes production code or a later hardware-specific issue appears.
 
 ## Documentation policy
 
