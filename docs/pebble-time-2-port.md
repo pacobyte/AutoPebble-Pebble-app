@@ -201,6 +201,15 @@ The run #83 PBW is functionally the same source build as the physically tested r
 
 The PT2 watch-app port itself is now hardware-validated and production-CI-validated. No further PT2 physical retest is required unless later production code changes or a new hardware-specific issue appears.
 
+## Future PT2-native ideas
+
+These are deliberately deferred beyond the completed compatibility port. They should be treated as optional follow-on features, each designed so existing AutoPebble behavior and protocol remain backward-compatible unless a deliberate versioned extension is introduced.
+
+- **Touchscreen support:** investigate Pebble Time 2 / Emery touch APIs and add touch gestures only where they improve navigation or quick actions without making physical-button operation worse. Prefer additive touch affordances rather than replacing the existing button model.
+- **Sound support:** investigate PT2 audio/speaker APIs for optional feedback, alerts, or action confirmation. Any sound behavior should be opt-in or explicitly requested by the originating AutoPebble action so existing automations remain silent.
+- **Optional ActionBar icons:** consider a backward-compatible per-button icon parameter for Quick Screens instead of trying to infer semantics from arbitrary action labels.
+- **ActionBar asset polish:** verify whether current generated/equivalent icons should be replaced with official-compatible Pebble assets if licensing/source provenance can be established.
+
 ## Documentation policy
 
 Keep this file concise and durable. Update it when an important architectural decision, compatibility constraint, test strategy, or release-state fact changes.
