@@ -1,0 +1,29 @@
+{
+  "author": "pacobyte",
+  "dependencies": {},
+  "keywords": ["pebble-time-2", "font", "experiment"],
+  "name": "pt2-font-lab",
+  "version": "0.1.0",
+  "pebble": {
+    "displayName": "PT2 Font Lab",
+    "enableMultiJS": false,
+    "messageKeys": [],
+    "projectType": "native",
+    "resources": {
+      "media": [
+        {"type":"font","name":"ATKINSON_18","file":"fonts/AtkinsonHyperlegible-Regular.ttf","characterRegex":"[ -~]"},
+        {"type":"font","name":"ATKINSON_24","file":"fonts/AtkinsonHyperlegible-Regular.ttf","characterRegex":"[ -~]"},
+        {"type":"font","name":"SOURCE_SANS_18","file":"fonts/SourceSans3-Regular.ttf","characterRegex":"[ -~]"},
+        {"type":"font","name":"SOURCE_SANS_24","file":"fonts/SourceSans3-Regular.ttf","characterRegex":"[ -~]"},
+        {"type":"font","name":"FIRA_SANS_18","file":"fonts/FiraSans-Regular.ttf","characterRegex":"[ -~]"},
+        {"type":"font","name":"FIRA_SANS_24","file":"fonts/FiraSans-Regular.ttf","characterRegex":"[ -~]"},
+        {"type":"font","name":"IBM_PLEX_SANS_18","file":"fonts/IBMPlexSans-Regular.ttf","characterRegex":"[ -~]"},
+        {"type":"font","name":"IBM_PLEX_SANS_24","file":"fonts/IBMPlexSans-Regular.ttf","characterRegex":"[ -~]"}
+      ]
+    },
+    "sdkVersion": "3",
+    "targetPlatforms": ["emery"],
+    "uuid": "75c7461f-47dc-4f73-a7b2-6a64aeb7d7cc",
+    "watchapp": {"watchface": false}
+  }
+}
