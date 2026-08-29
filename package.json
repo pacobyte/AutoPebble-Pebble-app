@@ -15,6 +15,21 @@
                     "menuIcon": true,
                     "name": "AUTOPEBBLE_ICON",
                     "type": "bitmap"
+                },
+                {
+                    "file": "images/actionbar_up.png",
+                    "name": "ACTIONBAR_UP",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/actionbar_select.png",
+                    "name": "ACTIONBAR_SELECT",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/actionbar_down.png",
+                    "name": "ACTIONBAR_DOWN",
+                    "type": "bitmap"
                 }
             ]
         },
@@ -22,7 +37,8 @@
         "targetPlatforms": [
             "aplite",
             "basalt",
-            "chalk"
+            "chalk",
+            "emery"
         ],
         "uuid": "1b2d45a5-c00a-4f89-b567-4cf4d2d78b2f",
         "watchapp": {

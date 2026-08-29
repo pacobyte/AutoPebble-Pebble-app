@@ -70,7 +70,7 @@ typedef struct AutoPebbleList{
 	char  ** labels;
 	char **  actions;
 	char ** longClickActions;
-	uint16_t cellSizes[20]; 
+	uint16_t cellSizes[30]; 
 	uint16_t size;
 	uint16_t firstCellSize;
 	uint16_t defaultCellSize;
@@ -140,6 +140,10 @@ typedef struct AutoPebbleQuickScreen{
 	TextLayer* textLayerMiddle;
 	TextLayer* textLayerBottom;
 	TextLayer* textLayerTitle;
+	ActionBarLayer* actionBar;
+	GBitmap* actionBarUp;
+	GBitmap* actionBarSelect;
+	GBitmap* actionBarDown;
 }AutoPebbleQuickScreen;
 
 AutoPebbleQuickScreen * newPebbleQuickScreen();

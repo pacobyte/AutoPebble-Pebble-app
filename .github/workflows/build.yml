@@ -1,0 +1,277 @@
+name: Build Pebble app
+
+on:
+  push:
+    branches:
+      - pebble-time-2
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Pebble build and emulator dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            nodejs npm libpng-dev \
+            libsdl2-2.0-0 libglib2.0-0 libpixman-1-0 zlib1g \
+            xvfb xdotool
+          python -m pip install --upgrade pip
+          python -m pip install pebble-tool==5.0.39
+
+      - name: Install latest Pebble SDK
+        run: pebble sdk install latest
+
+      - name: Build production PBW
+        run: pebble build
+
+      - name: Preserve production PBW
+        run: cp build/*.pbw autopebble-production.pbw
+
+      - name: Start virtual display
+        run: |
+          Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+          sleep 2
+
+      - name: Prepare CI-only native ActionBar demo
+        run: |
+          cp src/c/main.c src/c/main_prod.inc
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('src/c/main_prod.inc')
+          source = path.read_text()
+          source, count = re.subn(
+              r'\nint main\(void\)\n\{\n\tinit\(\);\n\tapp_event_loop\(\);\n\tdeinit\(\);\n\}\s*$',
+              '\n',
+              source,
+          )
+          if count != 1:
+              raise SystemExit('Could not remove original main() from CI demo source')
+          path.write_text(source)
+          PY
+          cp ci/emulator_demo_main.c src/c/main.c
+          rm -rf build
+          pebble build
+
+      - name: Launch demo in Emery emulator
+        run: |
+          pebble install --emulator emery
+          sleep 2
+          pebble logs --emulator emery > emery-interaction.log 2>&1 &
+          echo $! > /tmp/pebble-logs.pid
+          sleep 1
+
+      - name: Run native ActionBar hardening diagnostics
+        run: |
+          set +e
+          failures=0
+
+          wait_for_marker() {
+            marker="$1"
+            attempts="${2:-25}"
+            n=0
+            while [ "$n" -lt "$attempts" ]; do
+              if grep -q "$marker" emery-interaction.log; then
+                echo "PASS: $marker"
+                return 0
+              fi
+              sleep 0.2
+              n=$((n + 1))
+            done
+            echo "FAIL: missing $marker"
+            return 1
+          }
+
+          pulse_key() {
+            key="$1"
+            xdotool keydown "$key"
+            sleep 0.05
+            xdotool keyup "$key"
+          }
+
+          echo '--- wait for real primary PT2 Quick Screen ---'
+          if ! wait_for_marker 'CI_PRIMARY_READY' 55; then failures=$((failures + 1)); fi
+          if ! wait_for_marker 'CI_NATIVE_ACTIONBAR_ACTIVE'; then failures=$((failures + 1)); fi
+          if grep -q 'CI_NATIVE_ACTIONBAR_INACTIVE' emery-interaction.log; then
+            echo 'FAIL: Emery reported native ActionBar inactive'
+            failures=$((failures + 1))
+          else
+            echo 'PASS: Emery did not report native ActionBar inactive'
+          fi
+          pebble screenshot --emulator emery --no-open emery-actionbar-title.png
+
+          echo '--- single Up through ActionBar provider ---'
+          pulse_key w
+          if ! wait_for_marker 'CI_SINGLE_UP'; then failures=$((failures + 1)); fi
+
+          echo '--- long Up through ActionBar provider ---'
+          xdotool keydown w
+          sleep 1.2
+          xdotool keyup w
+          if ! wait_for_marker 'CI_LONG_UP'; then failures=$((failures + 1)); fi
+
+          echo '--- native held-button press rendering ---'
+          xdotool keydown w
+          sleep 0.10
+          pebble screenshot --emulator emery --no-open emery-actionbar-up-pressed.png
+          xdotool keyup w
+          sleep 0.6
+
+          echo '--- wait for stacked no-title secondary Quick Screen ---'
+          if ! wait_for_marker 'CI_SECONDARY_READY' 85; then
+            failures=$((failures + 1))
+          else
+            pebble screenshot --emulator emery --no-open emery-actionbar-secondary.png
+
+            echo '--- secondary Select ---'
+            pulse_key s
+            if ! wait_for_marker 'CI_SECOND_SELECT'; then failures=$((failures + 1)); fi
+
+            echo '--- Back/pop secondary and verify primary provider/actions restore ---'
+            pulse_key q
+            sleep 1.0
+            pebble screenshot --emulator emery --no-open emery-actionbar-restored.png
+            pulse_key s
+            if ! wait_for_marker 'CI_SINGLE_SELECT'; then failures=$((failures + 1)); fi
+          fi
+
+          echo '--- wait for physical-watch Media Volume regression screen ---'
+          if ! wait_for_marker 'CI_MEDIA_VOLUME_READY' 60; then
+            failures=$((failures + 1))
+          else
+            pebble screenshot --emulator emery --no-open emery-media-volume.png
+          fi
+
+          echo '--- wait for PT2 Text Screen regression screen ---'
+          if ! wait_for_marker 'CI_TEXT_SCREEN_READY' 60; then
+            failures=$((failures + 1))
+          else
+            pebble screenshot --emulator emery --no-open emery-text-screen.png
+          fi
+
+          echo '--- wait for PT2 List Screen regression screen ---'
+          if ! wait_for_marker 'CI_LIST_SCREEN_READY' 60; then
+            failures=$((failures + 1))
+          else
+            pebble screenshot --emulator emery --no-open emery-list-screen.png
+          fi
+
+          echo "NOTE: multi-click is intentionally deferred to the physical PT2 test because identical xdotool double-click injection failed through AutoPebble's inherited direct Window provider and the ActionBar provider."
+
+          if [ -f /tmp/pebble-logs.pid ]; then
+            kill "$(cat /tmp/pebble-logs.pid)" 2>/dev/null
+          fi
+          sleep 0.5
+
+          echo '===== Emery interaction log ====='
+          cat emery-interaction.log
+          echo '===== End interaction log ====='
+
+          if [ "$failures" -ne 0 ]; then
+            echo "Native ActionBar diagnostics failed: $failures assertion(s)"
+            exit 1
+          fi
+
+          echo 'All reproducible native ActionBar diagnostics passed.'
+
+      - name: Launch demo in Chalk emulator
+        run: |
+          pebble kill || true
+          sleep 1
+          pebble install --emulator chalk
+          sleep 2
+          pebble logs --emulator chalk > chalk-interaction.log 2>&1 &
+          echo $! > /tmp/chalk-logs.pid
+          sleep 1
+
+      - name: Verify Chalk stays on round Quick Screen path
+        run: |
+          set +e
+          failures=0
+
+          wait_for_chalk_marker() {
+            marker="$1"
+            attempts="${2:-25}"
+            n=0
+            while [ "$n" -lt "$attempts" ]; do
+              if grep -q "$marker" chalk-interaction.log; then
+                echo "PASS: $marker"
+                return 0
+              fi
+              sleep 0.2
+              n=$((n + 1))
+            done
+            echo "FAIL: missing $marker"
+            return 1
+          }
+
+          echo '--- wait for Chalk primary Quick Screen ---'
+          if ! wait_for_chalk_marker 'CI_PRIMARY_READY' 55; then failures=$((failures + 1)); fi
+          if ! wait_for_chalk_marker 'CI_NATIVE_ACTIONBAR_INACTIVE'; then failures=$((failures + 1)); fi
+          if grep -q 'CI_NATIVE_ACTIONBAR_ACTIVE' chalk-interaction.log; then
+            echo 'FAIL: Chalk entered native ActionBar path'
+            failures=$((failures + 1))
+          else
+            echo 'PASS: Chalk stayed off native ActionBar path'
+          fi
+
+          pebble screenshot --emulator chalk --no-open chalk-quick-baseline.png
+
+          if [ -f /tmp/chalk-logs.pid ]; then
+            kill "$(cat /tmp/chalk-logs.pid)" 2>/dev/null
+          fi
+          sleep 0.5
+
+          echo '===== Chalk interaction log ====='
+          cat chalk-interaction.log
+          echo '===== End Chalk interaction log ====='
+
+          if [ "$failures" -ne 0 ]; then
+            echo "Chalk Quick Screen regression diagnostics failed: $failures assertion(s)"
+            exit 1
+          fi
+
+          echo 'Chalk remained on the non-ActionBar round Quick Screen path.'
+
+      - name: Upload production PBW artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: autopebble-pbw
+          path: autopebble-production.pbw
+
+      - name: Upload native ActionBar hardening artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emery-actionbar-native
+          path: |
+            emery-actionbar-title.png
+            emery-actionbar-up-pressed.png
+            emery-actionbar-secondary.png
+            emery-actionbar-restored.png
+            emery-media-volume.png
+            emery-text-screen.png
+            emery-list-screen.png
+            emery-interaction.log
+
+      - name: Upload Chalk Quick Screen regression artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chalk-quick-regression
+          path: |
+            chalk-quick-baseline.png
+            chalk-interaction.log
