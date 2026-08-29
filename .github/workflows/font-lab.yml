@@ -1,0 +1,58 @@
+name: Build PT2 Font Lab
+
+on:
+  push:
+    branches:
+      - pt2-font-lab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Pebble toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nodejs npm libpng-dev
+          python -m pip install --upgrade pip
+          python -m pip install pebble-tool==5.0.39
+          pebble sdk install latest
+
+      - name: Fetch pinned font sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p experiments/pt2-font-lab/resources/fonts
+
+          fetch_blob() {
+            repo="$1"
+            sha="$2"
+            out="$3"
+            curl -fsSL -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$repo/git/blobs/$sha" \
+              | python -c 'import sys,json,base64; d=json.load(sys.stdin); sys.stdout.buffer.write(base64.b64decode(d["content"]))' \
+              > "$out"
+          }
+
+          fetch_blob google/fonts b3cc4200fcf09d600eac74002ab4ea65b404a536 experiments/pt2-font-lab/resources/fonts/AtkinsonHyperlegible-Regular.ttf
+          fetch_blob adobe-fonts/source-sans c5dd0b88cc8ff4edd7ebdcefee0290df15529657 experiments/pt2-font-lab/resources/fonts/SourceSans3-Regular.ttf
+          fetch_blob mozilla/Fira d9fdc0e922030c6836a9ad5f808fd7e1c5970873 experiments/pt2-font-lab/resources/fonts/FiraSans-Regular.ttf
+          fetch_blob IBM/plex bd6817d5202895da5ac4fad88de3da71e652881a experiments/pt2-font-lab/resources/fonts/IBMPlexSans-Regular.ttf
+
+          file experiments/pt2-font-lab/resources/fonts/*.ttf
+
+      - name: Build Font Lab
+        working-directory: experiments/pt2-font-lab
+        run: pebble build
+
+      - name: Upload Font Lab PBW
+        uses: actions/upload-artifact@v4
+        with:
+          name: pt2-font-lab
+          path: experiments/pt2-font-lab/build/*.pbw
